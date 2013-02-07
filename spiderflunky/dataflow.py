@@ -15,7 +15,8 @@ def assignments(ast):
     # TODO: Figure out whether |=, ^=, or &= can move functions or objects
     # containing them.
     return (node for node in ast.walk_down() if
-            node['type'] == 'AssignmentExpression' and node['operator'] == '=')
+        (node['type'] == 'AssignmentExpression' and node['operator'] == '=') or
+        (node['type'] == 'VariableDeclarator' and node['init'] is not None))
 
 
 def scope_of(symbol_name, in_node):
