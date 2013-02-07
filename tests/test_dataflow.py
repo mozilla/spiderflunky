@@ -72,3 +72,12 @@ def test_scope_of_inner_function():
     ast = parse(js)
     assignment = first(assignments(ast))
     eq_(scope_of(assignment['left']['name'], assignment)['id']['name'], 'bar')
+
+
+def test_scope_of_initialized_variable():
+    js = """function smoo() {
+                var a = 0;
+            }"""
+    ast = parse(js)
+    assignment = first(assignments(ast))
+    eq_(scope_of(assignment['id']['name'], assignment)['id']['name'], 'smoo')

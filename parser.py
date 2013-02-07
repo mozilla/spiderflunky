@@ -129,7 +129,8 @@ class FunctionDeclaration(Node):
             self['_scope'] = set(
                 node['id']['name'] for node in self.walk_down(
                     skip=lambda n: n['type'] == 'FunctionDeclaration')
-                if node['type'] == 'VariableDeclarator')
+                if node['type'] == 'VariableDeclarator') | \
+                set(param['name'] for param in self['params'])
         return self['_scope']
 
 
