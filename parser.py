@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import codecs
 import simplejson as json
 from logging import getLogger
@@ -10,7 +8,6 @@ import tempfile
 
 
 JS_ESCAPE = re.compile("\\\\+[ux]", re.I)
-SPIDERMONKEY_INSTALLATION = '/usr/local/bin/js'
 
 
 class JsReflectException(Exception):
@@ -35,9 +32,12 @@ def prepare_code(code):
     return JS_ESCAPE.sub("u", code)
 
 
-def parse(code, shell=SPIDERMONKEY_INSTALLATION):
-    """Return an AST tree of the JS passed in `code`."""
+def parse(code, shell='js'):
+    """Return an AST of the JS passed in ``code``
 
+    :arg shell: Path to the ``js`` interpreter
+
+    """
     if not code:
         return None
 
@@ -131,7 +131,7 @@ def decode(data):
     # Try straight UTF-8
     try:
         return unicode(data, "utf-8")
-    except:
+    except Exception:
         pass
 
     # Test for latin_1, because it can be matched as UTF-16
@@ -140,7 +140,7 @@ def decode(data):
     if all(ord(c) < 256 for c in data):
         try:
             return unicode(data, "latin_1")
-        except:
+        except Exception:
             pass
 
     # Test for various common encodings.
@@ -160,5 +160,42 @@ def filter_ascii(text):
     return "".join((x if is_standard_ascii(x) else "?") for x in text)
 
 
-if __name__ == '__main__':
-    print parse('function frob() {return 8;}')
+def ast_iter(ast):
+    """Yield nodes from an AST in depth-first pre-order.
+    
+    The AST we get from Reflect.parse is somewhat unsatisfying. It's not a
+    uniform tree shape; it seems to have already been turned into more
+    specialized objects. Thus, we have to traverse into different fields
+    depending on node type.
+    
+    """
+    yield ast
+
+    # For some node types, 'body' is a list; for others, an object.
+    children = ast.get('body')
+    if children is None:
+        children = ast.get('expression')  # for ExpressionStatements
+    if not children:
+        children = []
+    elif not isinstance(children, list):
+        # Fields like "expression" point to a single object.
+        children = [children]
+    for child in children:
+        # Just a "yield from":
+        for ret in ast_iter(child):
+            yield ret
+
+
+def id_map(ast):
+    """Add an ``_id`` key to each node in an AST so we can represent graphs of
+    them economically, and return a map of those IDs to the nodes."""
+    # TODO: Rename and have it add (weak) parent ptrs as well. We'll need those
+    # when figuring out the scopes of variables.
+    ret = {}
+    for node in ast_iter(ast):
+        if isinstance(node, unicode):
+            import pdb;pdb.set_trace()
+
+        identity = node['_id'] = id(node)
+        ret[identity] = node
+    return ret
