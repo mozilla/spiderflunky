@@ -60,22 +60,17 @@ class Node(dict):
                 for ret in child.walk_down():
                     yield ret
 
+    def _children(self):
+        body = self.get('body', [])
+        if not isinstance(body, list):
+            # For some node types, 'body' is a list; for others, an object.
+            body = [body]
+        return body
+
     def children(self):
         """Return my children, accounting for variations in where children are
         stored in each node type."""
-        # For some node types, 'body' is a list; for others, an object.
-        # TODO: Use a proper visitor or a hash.
-        children = self.get('body')
-        if children is None:
-            children = self.get('expression')  # for ExpressionStatements
-        if children is None:
-            children = self.get('declarations')  # for VariableDeclarations
-        if not children:
-            children = []
-        elif not isinstance(children, list):
-            # Fields like "expression" point to a single object.
-            children = [children]
-        return children
+        return self._children() or []
 
     def nearest_scope(self):
         """Return the closest containing Scope, constructing and caching it
@@ -109,6 +104,16 @@ class Node(dict):
         return self['_scope']
 
 
+class VariableDeclaration(Node):
+    def _children(self):
+        return self['declarations']
+
+
+class ExpressionStatement(Node):
+    def _children(self):
+        return [self['expression']]
+
+
 class Ast(Node):
     """A Reflect.parse AST with some other handy properties
 
@@ -136,6 +141,14 @@ class Ast(Node):
 
         self.by_id = _add_ids(self)
         _add_parent_refs(self)
+
+
+NODE_TYPES = {'Program': Ast,
+              'ExpressionStatement': ExpressionStatement,
+              'VariableDeclaration': VariableDeclaration}
+def _make_node(d):
+    """Construct the right kind of Node for a raw Reflect.parse node."""
+    return NODE_TYPES.get(d.get('type'), Node)(d)
 
 
 def parse(code, **kwargs):
@@ -200,7 +213,7 @@ def raw_parse(code, shell='js'):
         raise JsReflectException("Reflection failed")
 
     data = decode(data)
-    parsed = json.loads(data, strict=False, object_hook=Node)
+    parsed = json.loads(data, strict=False, object_hook=_make_node)
 
     if "error" in parsed and parsed["error"]:
         if parsed["error_message"].startswith("ReferenceError: Reflect"):
