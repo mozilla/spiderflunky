@@ -40,7 +40,7 @@ def test_scope_building():
                     var y;
                 }
                 
-                function var() {
+                function bar() {
                     var z;
                 }
             }"""

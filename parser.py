@@ -1,5 +1,5 @@
 import codecs
-import simplejson as json
+from inspect import isclass
 from logging import getLogger
 import os
 import re
@@ -7,6 +7,7 @@ import subprocess
 import tempfile
 
 from more_itertools import first
+import simplejson as json
 
 
 class JsReflectException(Exception):
@@ -57,7 +58,7 @@ class Node(dict):
         for child in self.children():
             if not skip(child):
                 # Just a "yield from":
-                for ret in child.walk_down():
+                for ret in child.walk_down(skip=skip):
                     yield ret
 
     def _children(self):
@@ -86,23 +87,6 @@ class Node(dict):
         return first(n for n in self.walk_up() if n['type'] in
                      ['FunctionDeclaration', 'Program'])
 
-    def scope(self):
-        """Return the set of symbols declared exactly at this node."""
-        # We store a set of symbols at each node that can hold a scope, except
-        # that we don't bother for the Program (global) scope.
-
-        # TODO: Maybe move this to a more specific subclass.
-        assert self['type'] in ['FunctionDeclaration', 'Program']
-
-        if '_scope' not in self:
-            # Find all the var decls within me, but don't go within any other
-            # functions. This implements hoisting.
-            self['_scope'] = set(
-                node['id']['name'] for node in self.walk_down(
-                    skip=lambda n: n['type'] == 'FunctionDeclaration')
-                if node['type'] == 'VariableDeclarator')
-        return self['_scope']
-
 
 class VariableDeclaration(Node):
     def _children(self):
@@ -112,6 +96,31 @@ class VariableDeclaration(Node):
 class ExpressionStatement(Node):
     def _children(self):
         return [self['expression']]
+
+
+class IfStatement(Node):
+    def _children(self):
+        ret = [self['test'], self['consequent']]
+        if self['alternate']:
+            ret.append(self['alternate'])
+        return ret
+
+
+class FunctionDeclaration(Node):
+    def scope(self):
+        """Return the set of symbols declared exactly at this node."""
+        # We store a set of symbols at each node that can hold a scope, except
+        # that we don't bother for the Program (global) scope. It holds
+        # everything we couldn't find elsewhere.
+
+        if '_scope' not in self:
+            # Find all the var decls within me, but don't go within any other
+            # functions. This implements hoisting.
+            self['_scope'] = set(
+                node['id']['name'] for node in self.walk_down(
+                    skip=lambda n: n['type'] == 'FunctionDeclaration')
+                if node['type'] == 'VariableDeclarator')
+        return self['_scope']
 
 
 class Program(Node):
@@ -143,9 +152,8 @@ class Program(Node):
         _add_parent_refs(self)
 
 
-NODE_TYPES = {'Program': Program,
-              'ExpressionStatement': ExpressionStatement,
-              'VariableDeclaration': VariableDeclaration}
+NODE_TYPES = dict((cls.__name__, cls) for cls in globals().values() if
+                  isclass(cls) and issubclass(cls, dict))
 def _make_node(d):
     """Construct the right kind of Node for a raw Reflect.parse node."""
     return NODE_TYPES.get(d.get('type'), Node)(d)
