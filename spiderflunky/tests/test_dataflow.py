@@ -1,7 +1,7 @@
 from more_itertools import first
 from nose.tools import eq_
 
-from spiderflunky.dataflow import assignments, scope_of
+from spiderflunky.dataflow import assignments
 from spiderflunky.parser import parse
 
 
@@ -17,7 +17,6 @@ def test_assignments():
           a['right'].get('name', a['right'].get('value'))) for a in
          assignments(parse(js))],
         [('a', 8), ('b', 'a'), ('d', 'a')])
-    # TODO: Catch "var a = 8;".
 
 
 def test_scope_of_global():
@@ -25,7 +24,7 @@ def test_scope_of_global():
     js = """a = 0;"""
     ast = parse(js)
     assignment = first(assignments(ast))
-    eq_(scope_of(assignment['left']['name'], assignment)['type'], 'Program')
+    eq_(assignment.scope_of(assignment['left']['name'])['type'], 'Program')
 
 
 def test_scope_of_global_function():
@@ -35,7 +34,7 @@ def test_scope_of_global_function():
             }"""
     ast = parse(js)
     assignment = first(assignments(ast))
-    eq_(scope_of(assignment['left']['name'], assignment)['type'], 'FunctionDeclaration')
+    eq_(assignment.scope_of(assignment['left']['name'])['type'], 'FunctionDeclaration')
 
 
 def test_scope_of_inner_reference():
@@ -48,7 +47,7 @@ def test_scope_of_inner_reference():
             }"""
     ast = parse(js)
     assignment = first(assignments(ast))
-    eq_(scope_of(assignment['left']['name'], assignment)['id']['name'], 'smoo')
+    eq_(assignment.scope_of(assignment['left']['name'])['id']['name'], 'smoo')
 
 
 def test_scope_of_inner_function():
@@ -59,7 +58,7 @@ def test_scope_of_inner_function():
             }"""
     ast = parse(js)
     assignment = first(assignments(ast))
-    eq_(scope_of(assignment['left']['name'], assignment)['type'], 'Program')
+    eq_(assignment.scope_of(assignment['left']['name'])['type'], 'Program')
 
 
 def test_scope_of_inner_function():
@@ -71,7 +70,7 @@ def test_scope_of_inner_function():
             }"""
     ast = parse(js)
     assignment = first(assignments(ast))
-    eq_(scope_of(assignment['left']['name'], assignment)['id']['name'], 'bar')
+    eq_(assignment.scope_of(assignment['left']['name'])['id']['name'], 'bar')
 
 
 def test_scope_of_initialized_variable():
@@ -80,4 +79,4 @@ def test_scope_of_initialized_variable():
             }"""
     ast = parse(js)
     assignment = first(assignments(ast))
-    eq_(scope_of(assignment['id']['name'], assignment)['id']['name'], 'smoo')
+    eq_(assignment.scope_of(assignment['id']['name'])['id']['name'], 'smoo')

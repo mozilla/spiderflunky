@@ -97,6 +97,18 @@ class Node(dict):
         return first(n for n in self.walk_up() if n['type'] in
                      ['FunctionDeclaration', 'Program'])
 
+    def scope_of(self, symbol_name):
+        """Return the nearest enclosing AST node (including myself) where the
+        variable named ``symbol_name`` is defined."""
+        # TODO: Find formal params, lets, and window.* (and navigator.*?
+        # Anything else magic? Ugh, and you can stick refs to window in things.
+        # Is that going to be a problem?)
+
+        for node in self.scope_chain():
+            if symbol_name in node.scope():
+                return node
+        return node  # global
+
 
 class VariableDeclaration(Node):
     def _children(self):

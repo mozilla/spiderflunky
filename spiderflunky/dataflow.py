@@ -12,8 +12,6 @@ def assignments(ast):
     out assignments with literal strings and ints and such on the RHS.
 
     """
-    # TODO: Figure out whether |=, ^=, or &= can move functions or objects
-    # containing them.
     return (node for node in ast.walk_down() if
         (node['type'] == 'AssignmentExpression' and node['operator'] == '=') or
         (node['type'] == 'VariableDeclarator' and node['init'] is not None))
