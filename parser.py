@@ -32,17 +32,25 @@ def prepare_code(code):
     return JS_ESCAPE.sub("u", code)
 
 
+class Ast(dict):
+    """A Reflect.parse AST with some other handy properties"""
+
+    def __new__(cls, raw_ast):
+        """Add parent pointers to AST nodes, and assemble a map so we can
+        reference nodes by ID."""
+        new = dict.__new__(cls, **raw_ast)
+        new.by_id = _add_ids(new)
+        _add_parent_refs(new)
+        return new
+
+
 def parse(code, **kwargs):
-    """Return an AST of some JS in native Reflect.parse format along with a map
-    of IDs to nodes.
+    """Construct an ``Ast`` of the given JS code.
 
     :arg shell: Path to the ``js`` interpreter
 
     """
-    ast = raw_parse(code, **kwargs)
-    by_id = _add_ids(ast)
-    _add_parent_refs(ast)
-    return ast, by_id
+    return Ast(raw_parse(code, **kwargs))
 
 
 def raw_parse(code, shell='js'):

@@ -14,6 +14,6 @@ def test_assignments():
             }"""
     eq_([(a['left']['name'],
           a['right'].get('name', a['right'].get('value'))) for a in
-         assignments(parse(js)[0])],
+         assignments(parse(js))],
         [('a', 8), ('b', 'a'), ('d', 'a')])
     # TODO: Catch "var a = 8;".

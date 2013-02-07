@@ -15,7 +15,7 @@ def test_call_sites():
 
             call();
             """
-    ast, _ = parse(js)
+    ast = parse(js)
     eq_([node['callee']['name'] for node in call_sites(ast)],
         ['answer', 'call'])
 
