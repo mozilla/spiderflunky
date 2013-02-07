@@ -1,18 +1,18 @@
 from more_itertools import first
 from nose.tools import eq_
 
-from spiderflunky.parser import parse, ast_iter, Ast
+from spiderflunky.parser import parse, Node
 
 
-def test_ast_iter_order():
+def test_walk_down_order():
     """Test a contrived case where we can test that the visitation order it
     right."""
-    ast = Ast({'a': 1, 'body': [Ast({'a': 2, 'body': [Ast({'a': 3, 'body': []})]}),
-                                Ast({'a': 4, 'body': []})]})
-    eq_([node['a'] for node in ast_iter(ast)], [1, 2, 3, 4])
+    ast = Node({'a': 1, 'body': [Node({'a': 2, 'body': [Node({'a': 3, 'body': []})]}),
+                                 Node({'a': 4, 'body': []})]})
+    eq_([node['a'] for node in ast.walk_down()], [1, 2, 3, 4])
 
 
-def test_ast_iter_smoke():
+def test_walk_down_smoke():
     """Try it on some real code, and make sure it doesn't crash.
 
     Here, some nodes have bodies that are lists and others have bodies that are

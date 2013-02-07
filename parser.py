@@ -114,11 +114,11 @@ class ExpressionStatement(Node):
         return [self['expression']]
 
 
-class Ast(Node):
+class Program(Node):
     """A Reflect.parse AST with some other handy properties
 
-    An Ast is considered to be immutable once finalize() is called, though we
-    may continue to make annotations on it for speed.
+    A Program is considered to be immutable once finalize() is called, though
+    we may continue to make annotations on it for speed.
 
     """
     def finalize(self):
@@ -143,7 +143,7 @@ class Ast(Node):
         _add_parent_refs(self)
 
 
-NODE_TYPES = {'Program': Ast,
+NODE_TYPES = {'Program': Program,
               'ExpressionStatement': ExpressionStatement,
               'VariableDeclaration': VariableDeclaration}
 def _make_node(d):
@@ -152,12 +152,12 @@ def _make_node(d):
 
 
 def parse(code, **kwargs):
-    """Construct an ``Ast`` of the given JS code.
+    """Construct a ``Program`` of the given JS code.
 
     :arg shell: Path to the ``js`` interpreter
 
     """
-    ast = Ast(raw_parse(code, **kwargs))
+    ast = Program(raw_parse(code, **kwargs))
     ast.finalize()
     return ast
 
