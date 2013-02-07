@@ -1,10 +1,8 @@
-from pprint import pprint
-
 from nose import SkipTest
 from nose.tools import eq_
 
 from spiderflunky.calls import call_sites
-from spiderflunky.parser import parse, id_map
+from spiderflunky.parser import parse
 
 
 def test_call_sites():
@@ -17,7 +15,7 @@ def test_call_sites():
 
             call();
             """
-    ast = parse(js)
+    ast, _ = parse(js)
     eq_([node['callee']['name'] for node in call_sites(ast)],
         ['answer', 'call'])
 

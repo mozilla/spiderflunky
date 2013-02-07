@@ -26,4 +26,4 @@ def test_ast_iter_smoke():
 
             call();
             """
-    ast = parse(js)
+    ast, _ = parse(js)

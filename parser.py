@@ -32,8 +32,22 @@ def prepare_code(code):
     return JS_ESCAPE.sub("u", code)
 
 
-def parse(code, shell='js'):
-    """Return an AST of the JS passed in ``code``
+def parse(code, **kwargs):
+    """Return an AST of some JS in native Reflect.parse format along with a map
+    of IDs to nodes.
+
+    :arg shell: Path to the ``js`` interpreter
+
+    """
+    ast = raw_parse(code, **kwargs)
+    by_id = _add_ids(ast)
+    _add_parent_refs(ast)
+    return ast, by_id
+
+
+def raw_parse(code, shell='js'):
+    """Return an AST of the JS passed in ``code`` in native Reflect.parse
+    format
 
     :arg shell: Path to the ``js`` interpreter
 
@@ -170,7 +184,15 @@ def ast_iter(ast):
     
     """
     yield ast
+    for child in _node_children(ast):
+        # Just a "yield from":
+        for ret in ast_iter(child):
+            yield ret
 
+
+def _node_children(ast):
+    """Return the children of an AST node, accounting for variations in where
+    children are stored in each node type."""
     # For some node types, 'body' is a list; for others, an object.
     children = ast.get('body')
     if children is None:
@@ -180,22 +202,23 @@ def ast_iter(ast):
     elif not isinstance(children, list):
         # Fields like "expression" point to a single object.
         children = [children]
-    for child in children:
-        # Just a "yield from":
-        for ret in ast_iter(child):
-            yield ret
+    return children
 
 
-def id_map(ast):
+def _add_ids(ast):
     """Add an ``_id`` key to each node in an AST so we can represent graphs of
     them economically, and return a map of those IDs to the nodes."""
     # TODO: Rename and have it add (weak) parent ptrs as well. We'll need those
     # when figuring out the scopes of variables.
     ret = {}
     for node in ast_iter(ast):
-        if isinstance(node, unicode):
-            import pdb;pdb.set_trace()
-
         identity = node['_id'] = id(node)
         ret[identity] = node
     return ret
+
+
+def _add_parent_refs(ast):
+    """Add parent pointers to each node in an AST."""
+    for child in _node_children(ast):
+        child['_parent'] = ast
+        _add_parent_refs(child)
