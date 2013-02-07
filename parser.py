@@ -74,12 +74,22 @@ class Node(dict):
         return self._children() or []
 
     def nearest_scope(self):
-        """Return the closest containing Scope, constructing and caching it
+        """Return the closest containing scope, constructing and caching it
         first if necessary."""
-        return self._nearest_scope_holder().scope()
+        return self.nearest_scope_holder().scope()
 
-    def _nearest_scope_holder(self):
-        """Return the nearest node that can have its own scope.
+    def scope_chain(self):
+        """Yield each scope-defining node from myself upward."""
+        node = self.nearest_scope_holder()
+        while True:
+            yield node
+            if node['type'] == 'Program':
+                break
+            node = node['_parent'].nearest_scope_holder()
+
+    def nearest_scope_holder(self):
+        """Return the nearest node that can have its own scope, potentially
+        including myself.
 
         This will be either a FunctionDeclaration or a Program (for now).
 
@@ -113,7 +123,7 @@ class FunctionDeclaration(Node):
         # that we don't bother for the Program (global) scope. It holds
         # everything we couldn't find elsewhere.
 
-        if '_scope' not in self:
+        if '_scope' not in self:  # could store this in an instance var
             # Find all the var decls within me, but don't go within any other
             # functions. This implements hoisting.
             self['_scope'] = set(
@@ -150,6 +160,10 @@ class Program(Node):
 
         self.by_id = _add_ids(self)
         _add_parent_refs(self)
+
+    def scope(self):
+        # Arguable.
+        return set()
 
 
 NODE_TYPES = dict((cls.__name__, cls) for cls in globals().values() if

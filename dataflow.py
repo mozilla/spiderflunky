@@ -25,8 +25,10 @@ def scope_of(symbol_name, in_node):
     # else magic? Ugh, and you can stick refs to window in things. Is that
     # going to be a problem?)
 
-    while not done:
-        scope = in_node.nearest_scope()
+    for node in in_node.scope_chain():
+        if symbol_name in node.scope():
+            return node
+    return node  # global
 
 
 # TODO: We'll also have to watch when objects are created. You can put
