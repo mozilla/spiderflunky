@@ -1,6 +1,6 @@
 from nose.tools import eq_
 
-from spiderflunky.dataflow import assignments
+from spiderflunky.dataflow import assignments, scope_of
 from spiderflunky.parser import parse
 
 
@@ -17,3 +17,11 @@ def test_assignments():
          assignments(parse(js))],
         [('a', 8), ('b', 'a'), ('d', 'a')])
     # TODO: Catch "var a = 8;".
+
+
+def test_scope_of_global():
+    """Make sure the scope of a global is the entire program."""
+    js = """a = 0;"""
+    ast = parse(js)
+    assignment = next(assignments(ast))
+    eq_(scope_of(assignment['left']['name'], assignment), ast)

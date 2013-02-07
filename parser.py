@@ -6,8 +6,7 @@ import re
 import subprocess
 import tempfile
 
-
-JS_ESCAPE = re.compile("\\\\+[ux]", re.I)
+from more_itertools import first
 
 
 class JsReflectException(Exception):
@@ -24,24 +23,119 @@ class JsReflectException(Exception):
         return self.__unicode__().encode('utf-8')
 
 
-def prepare_code(code):
-    """Prepare code for tree generation."""
-    code = decode(code)
-    # Acceptable unicode characters still need to be stripped. Just remove the
-    # slash: a character is necessary to prevent bad identifier errors.
-    return JS_ESCAPE.sub("u", code)
+class Node(dict):
+    """A wrapper around a native Reflect.parse dict providing some convenience
+    methods and some caching of expensive computations
+
+    Importing a zillion helper functions into every module is a pain.
+
+    """
+    def walk_up(self):
+        """Yield each node from here to the root of the tree, starting with
+        myself."""
+        node = self
+        while True:
+            yield node
+            node = node.get('_parent')
+            if node is None:
+                break
+
+    def walk_down(self, skip=lambda n: False):
+        """Yield each node from here downware, myself included, in depth-first
+        pre-order.
+
+        :arg skip: A predicate decribing nodes to not descend into. We always
+            return ourselves, even if the predicate says to skip us.
+
+        The AST we get from Reflect.parse is somewhat unsatisfying. It's not a
+        uniform tree shape; it seems to have already been turned into more
+        specialized objects. Thus, we have to traverse into different fields
+        depending on node type.
+
+        """
+        yield self
+        for child in self.children():
+            if not skip(child):
+                # Just a "yield from":
+                for ret in child.walk_down():
+                    yield ret
+
+    def children(self):
+        """Return my children, accounting for variations in where children are
+        stored in each node type."""
+        # For some node types, 'body' is a list; for others, an object.
+        # TODO: Use a proper visitor or a hash.
+        children = self.get('body')
+        if children is None:
+            children = self.get('expression')  # for ExpressionStatements
+        if children is None:
+            children = self.get('declarations')  # for VariableDeclarations
+        if not children:
+            children = []
+        elif not isinstance(children, list):
+            # Fields like "expression" point to a single object.
+            children = [children]
+        return children
+
+    def nearest_scope(self):
+        """Return the closest containing Scope, constructing and caching it
+        first if necessary."""
+        return self._nearest_scope_holder().scope()
+
+    def _nearest_scope_holder(self):
+        """Return the nearest node that can have its own scope.
+
+        This will be either a FunctionDeclaration or a Program (for now).
+
+        """
+        return first(n for n in self.walk_up() if n['type'] in
+                     ['FunctionDeclaration', 'Program'])
+
+    def scope(self):
+        """Return the set of symbols declared exactly at this node."""
+        # We store a set of symbols at each node that can hold a scope, except
+        # that we don't bother for the Program (global) scope.
+
+        # TODO: Maybe move this to a more specific subclass.
+        assert self['type'] in ['FunctionDeclaration', 'Program']
+
+        if '_scope' not in self:
+            # Find all the var decls within me, but don't go within any other
+            # functions. This implements hoisting.
+            self['_scope'] = set(
+                node['id']['name'] for node in self.walk_down(
+                    skip=lambda n: n['type'] == 'FunctionDeclaration')
+                if node['type'] == 'VariableDeclarator')
+        return self['_scope']
 
 
-class Ast(dict):
-    """A Reflect.parse AST with some other handy properties"""
+class Ast(Node):
+    """A Reflect.parse AST with some other handy properties
 
-    def __new__(cls, raw_ast):
-        """Add parent pointers to AST nodes, and assemble a map so we can
+    An Ast is considered to be immutable once finalize() is called, though we
+    may continue to make annotations on it for speed.
+
+    """
+    def finalize(self):
+        """Add parent pointers to my nodes, and assemble a map so we can
         reference nodes by ID."""
-        new = dict.__new__(cls, **raw_ast)
-        new.by_id = _add_ids(new)
-        _add_parent_refs(new)
-        return new
+        def _add_ids(ast):
+            """Add an ``_id`` key to each node in me so we can represent graphs of
+            them economically, and build a map of those IDs to the nodes."""
+            ret = {}
+            for node in ast.walk_down():
+                identity = node['_id'] = id(node)
+                ret[identity] = node
+            return ret
+
+        def _add_parent_refs(node):
+            """Add parent pointers to each node in me."""
+            for child in node.children():
+                child['_parent'] = node
+                _add_parent_refs(child)
+
+        self.by_id = _add_ids(self)
+        _add_parent_refs(self)
 
 
 def parse(code, **kwargs):
@@ -50,7 +144,9 @@ def parse(code, **kwargs):
     :arg shell: Path to the ``js`` interpreter
 
     """
-    return Ast(raw_parse(code, **kwargs))
+    ast = Ast(raw_parse(code, **kwargs))
+    ast.finalize()
+    return ast
 
 
 def raw_parse(code, shell='js'):
@@ -104,7 +200,7 @@ def raw_parse(code, shell='js'):
         raise JsReflectException("Reflection failed")
 
     data = decode(data)
-    parsed = json.loads(data, strict=False)
+    parsed = json.loads(data, strict=False, object_hook=Node)
 
     if "error" in parsed and parsed["error"]:
         if parsed["error_message"].startswith("ReferenceError: Reflect"):
@@ -117,6 +213,17 @@ def raw_parse(code, shell='js'):
                                      line=parsed["line_number"])
 
     return parsed
+
+
+JS_ESCAPE = re.compile("\\\\+[ux]", re.I)
+
+
+def prepare_code(code):
+    """Prepare code for tree generation."""
+    code = decode(code)
+    # Acceptable unicode characters still need to be stripped. Just remove the
+    # slash: a character is necessary to prevent bad identifier errors.
+    return JS_ESCAPE.sub("u", code)
 
 
 # From https://github.com/mattbasta/app-validator/blob/ac8e0163f00ad1f989f4d08d59a6e8d51d5c6d2b/appvalidator/unicodehelper.py:
@@ -183,50 +290,6 @@ def filter_ascii(text):
 
 
 def ast_iter(ast):
-    """Yield nodes from an AST in depth-first pre-order.
-    
-    The AST we get from Reflect.parse is somewhat unsatisfying. It's not a
-    uniform tree shape; it seems to have already been turned into more
-    specialized objects. Thus, we have to traverse into different fields
-    depending on node type.
-    
-    """
-    yield ast
-    for child in _node_children(ast):
-        # Just a "yield from":
-        for ret in ast_iter(child):
-            yield ret
-
-
-def _node_children(ast):
-    """Return the children of an AST node, accounting for variations in where
-    children are stored in each node type."""
-    # For some node types, 'body' is a list; for others, an object.
-    children = ast.get('body')
-    if children is None:
-        children = ast.get('expression')  # for ExpressionStatements
-    if not children:
-        children = []
-    elif not isinstance(children, list):
-        # Fields like "expression" point to a single object.
-        children = [children]
-    return children
-
-
-def _add_ids(ast):
-    """Add an ``_id`` key to each node in an AST so we can represent graphs of
-    them economically, and return a map of those IDs to the nodes."""
-    # TODO: Rename and have it add (weak) parent ptrs as well. We'll need those
-    # when figuring out the scopes of variables.
-    ret = {}
-    for node in ast_iter(ast):
-        identity = node['_id'] = id(node)
-        ret[identity] = node
-    return ret
-
-
-def _add_parent_refs(ast):
-    """Add parent pointers to each node in an AST."""
-    for child in _node_children(ast):
-        child['_parent'] = ast
-        _add_parent_refs(child)
+    """Yield nodes from an AST in depth-first pre-order."""
+    # Deprecated in favor of walk_down().
+    return ast.walk_down()
