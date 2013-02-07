@@ -1,7 +1,5 @@
 from collections import namedtuple
 
-from spiderflunky.parser import ast_iter
-
 
 # scope is an AST node.
 ScopedSymbol = namedtuple('ScopedSymbol', ['scope', 'symbol'])
@@ -16,7 +14,7 @@ def assignments(ast):
     """
     # TODO: Figure out whether |=, ^=, or &= can move functions or objects
     # containing them.
-    return (node for node in ast_iter(ast) if
+    return (node for node in ast.walk_down() if
             node['type'] == 'AssignmentExpression' and node['operator'] == '=')
 
 

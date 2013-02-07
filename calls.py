@@ -1,9 +1,9 @@
-from spiderflunky.parser import parse, ast_iter
+from spiderflunky.parser import parse
 
 
 def call_sites(ast):
     """Yield the AST nodes representing function calls."""
-    return (node for node in ast_iter(ast) if node['type'] == 'CallExpression')
+    return (node for node in ast.walk_down() if node['type'] == 'CallExpression')
 
 
 def call_graph(ast):
