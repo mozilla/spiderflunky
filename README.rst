@@ -15,6 +15,7 @@ Getting Started
 Build SpiderMonkey's ``js`` executable. Check out mozilla-central, and then
 build the interpreter::
 
+    hg clone https://hg.mozilla.org/mozilla-central/ mozilla-central
     cd mozilla-central
     cd js/src
     autoconf213  # must be 2.13
