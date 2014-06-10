@@ -35,14 +35,12 @@ class Node(dict):
         """Yield each node from here to the root of the tree, starting with
         myself."""
         node = self
-        while True:
+        while node:
             yield node
             node = node.get('_parent')
-            if node is None:
-                break
 
     def walk_down(self, skip=lambda n: False):
-        """Yield each node from here downware, myself included, in depth-first
+        """Yield each node from here downward, myself included, in depth-first
         pre-order.
 
         :arg skip: A predicate decribing nodes to not descend into. We always
