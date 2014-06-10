@@ -1,12 +1,9 @@
 import codecs
-from inspect import isclass
-from logging import getLogger
 import os
 import re
 import subprocess
 import tempfile
-
-from more_itertools import first
+from .js_ast import Program, make_node
 import simplejson as json
 
 
@@ -24,166 +21,6 @@ class JsReflectException(Exception):
         return self.__unicode__().encode('utf-8')
 
 
-class Node(dict):
-    """A wrapper around a native Reflect.parse dict providing some convenience
-    methods and some caching of expensive computations
-
-    Importing a zillion helper functions into every module is a pain.
-
-    """
-    def walk_up(self):
-        """Yield each node from here to the root of the tree, starting with
-        myself."""
-        node = self
-        while node:
-            yield node
-            node = node.get('_parent')
-
-    def walk_down(self, skip=lambda n: False):
-        """Yield each node from here downward, myself included, in depth-first
-        pre-order.
-
-        :arg skip: A predicate decribing nodes to not descend into. We always
-            return ourselves, even if the predicate says to skip us.
-
-        The AST we get from Reflect.parse is somewhat unsatisfying. It's not a
-        uniform tree shape; it seems to have already been turned into more
-        specialized objects. Thus, we have to traverse into different fields
-        depending on node type.
-
-        """
-        yield self
-        for child in self.children():
-            if not skip(child):
-                # Just a "yield from":
-                for ret in child.walk_down(skip=skip):
-                    yield ret
-
-    def _children(self):
-        body = self.get('body', [])
-        if not isinstance(body, list):
-            # For some node types, 'body' is a list; for others, an object.
-            body = [body]
-        return body
-
-    def children(self):
-        """Return my children, accounting for variations in where children are
-        stored in each node type."""
-        return self._children() or []
-
-    def nearest_scope(self):
-        """Return the closest containing scope, constructing and caching it
-        first if necessary."""
-        return self.nearest_scope_holder().scope()
-
-    def scope_chain(self):
-        """Yield each scope-defining node from myself upward."""
-        node = self.nearest_scope_holder()
-        while True:
-            yield node
-            if node['type'] == 'Program':
-                break
-            node = node['_parent'].nearest_scope_holder()
-
-    def nearest_scope_holder(self):
-        """Return the nearest node that can have its own scope, potentially
-        including myself.
-
-        This will be either a FunctionDeclaration or a Program (for now).
-
-        """
-        return first(n for n in self.walk_up() if n['type'] in
-                     ['FunctionDeclaration', 'Program'])
-
-    def scope_of(self, symbol_name):
-        """Return the nearest enclosing AST node (including myself) where the
-        variable named ``symbol_name`` is defined."""
-        # TODO: Find formal params, lets, and window.* (and navigator.*?
-        # Anything else magic? Ugh, and you can stick refs to window in things.
-        # Is that going to be a problem?)
-
-        for node in self.scope_chain():
-            if symbol_name in node.scope():
-                return node
-        return node  # global
-
-
-class VariableDeclaration(Node):
-    def _children(self):
-        return self['declarations']
-
-
-class ExpressionStatement(Node):
-    def _children(self):
-        return [self['expression']]
-
-
-class IfStatement(Node):
-    def _children(self):
-        ret = [self['test'], self['consequent']]
-        if self['alternate']:
-            ret.append(self['alternate'])
-        return ret
-
-
-class FunctionDeclaration(Node):
-    def scope(self):
-        """Return the set of symbols declared exactly at this node."""
-        # We store a set of symbols at each node that can hold a scope, except
-        # that we don't bother for the Program (global) scope. It holds
-        # everything we couldn't find elsewhere.
-
-        if '_scope' not in self:  # could store this in an instance var
-            # Find all the var decls within me, but don't go within any other
-            # functions. This implements hoisting.
-            self['_scope'] = set(
-                node['id']['name'] for node in self.walk_down(
-                    skip=lambda n: n['type'] == 'FunctionDeclaration')
-                if node['type'] == 'VariableDeclarator') | \
-                set(param['name'] for param in self['params'])
-        return self['_scope']
-
-
-class Program(Node):
-    """A Reflect.parse AST with some other handy properties
-
-    A Program is considered to be immutable once finalize() is called, though
-    we may continue to make annotations on it for speed.
-
-    """
-    def finalize(self):
-        """Add parent pointers to my nodes, and assemble a map so we can
-        reference nodes by ID."""
-        def _add_ids(ast):
-            """Add an ``_id`` key to each node in me so we can represent graphs of
-            them economically, and build a map of those IDs to the nodes."""
-            ret = {}
-            for node in ast.walk_down():
-                identity = node['_id'] = id(node)
-                ret[identity] = node
-            return ret
-
-        def _add_parent_refs(node):
-            """Add parent pointers to each node in me."""
-            for child in node.children():
-                child['_parent'] = node
-                _add_parent_refs(child)
-
-        self.by_id = _add_ids(self)
-        _add_parent_refs(self)
-
-    def scope(self):
-        # Arguable.
-        return set()
-
-
-NODE_TYPES = dict((cls.__name__, cls) for cls in globals().values() if
-                  isclass(cls) and issubclass(cls, dict))
-def _make_node(d):
-    """Construct the right kind of Node for a raw Reflect.parse node."""
-    return NODE_TYPES.get(d.get('type'), Node)(d)
-
-
 def parse(code, **kwargs):
     """Construct a ``Program`` of the given JS code.
 
@@ -194,17 +31,15 @@ def parse(code, **kwargs):
     ast.finalize()
     return ast
 
+ERROR_CODE = 100
 
-def raw_parse(code, shell='js'):
+def raw_parse(code, shell='js', object_hook=make_node, error_code=ERROR_CODE):
     """Return an AST of the JS passed in ``code`` in native Reflect.parse
     format
 
     :arg shell: Path to the ``js`` interpreter
 
     """
-    if not code:
-        return None
-
     code = prepare_code(code)
 
     temp = tempfile.NamedTemporaryFile(mode="w+b", delete=False)
@@ -215,13 +50,15 @@ def raw_parse(code, shell='js'):
     try{options("allow_xml");}catch(e){}
     try{
         print(JSON.stringify(Reflect.parse(read(%s))));
+        quit(0);
     } catch(e) {
         print(JSON.stringify({
             "error":true,
             "error_message":e.toString(),
             "line_number":e.lineNumber
         }));
-    }""" % json.dumps(temp.name)
+        quit(%d);
+    }""" % (json.dumps(temp.name), error_code)
 
     try:
         cmd = [shell, "-e", data]
@@ -230,10 +67,28 @@ def raw_parse(code, shell='js'):
             stderr=subprocess.PIPE,
             stdout=subprocess.PIPE)
 
-        data, stderr = shell_obj.communicate()
-        if stderr:
-            raise RuntimeError('Error calling %r: %s' % (cmd, stderr))
+        data, _ = shell_obj.communicate()
+        error_code = shell_obj.returncode
+        
+        if data == "":
+            raise JsReflectException("Reflection failed: No AST outputted")
 
+        if error_code not in (0, 3, 100):
+            raise RuntimeError('Error calling %r: %s' % (cmd, data))
+
+        data = decode(data)
+        parsed = json.loads(data, strict=False, object_hook=object_hook)
+
+        if error_code == ERROR_CODE:
+            if "error" in parsed and parsed["error"]:
+                if parsed["error_message"].startswith("ReferenceError: Reflect"):
+                    raise RuntimeError("Spidermonkey version too old; "
+                                       "1.8pre+ required; error='%s'; "
+                                       "spidermonkey='%s'" % (parsed["error_message"],
+                                                              shell))
+                else:
+                    raise JsReflectException(parsed["error_message"],
+                                             line=parsed["line_number"])
         # Closing the temp file will delete it.
     finally:
         try:
@@ -241,23 +96,6 @@ def raw_parse(code, shell='js'):
             os.unlink(temp.name)
         except IOError:
             pass
-
-    if not data:
-        raise JsReflectException("Reflection failed")
-
-    data = decode(data)
-    parsed = json.loads(data, strict=False, object_hook=_make_node)
-
-    if "error" in parsed and parsed["error"]:
-        if parsed["error_message"].startswith("ReferenceError: Reflect"):
-            raise RuntimeError("Spidermonkey version too old; "
-                               "1.8pre+ required; error='%s'; "
-                               "spidermonkey='%s'" % (parsed["error_message"],
-                                                      shell))
-        else:
-            raise JsReflectException(parsed["error_message"],
-                                     line=parsed["line_number"])
-
     return parsed
 
 
@@ -273,8 +111,6 @@ def prepare_code(code):
 
 
 # From https://github.com/mattbasta/app-validator/blob/ac8e0163f00ad1f989f4d08d59a6e8d51d5c6d2b/appvalidator/unicodehelper.py:
-
-import codecs
 
 # Many thanks to nmaier for inspiration and code in this module
 
@@ -306,7 +142,7 @@ def decode(data):
     # Try straight UTF-8
     try:
         return unicode(data, "utf-8")
-    except Exception:
+    except UnicodeDecodeError:
         pass
 
     # Test for latin_1, because it can be matched as UTF-16
@@ -315,7 +151,7 @@ def decode(data):
     if all(ord(c) < 256 for c in data):
         try:
             return unicode(data, "latin_1")
-        except Exception:
+        except UnicodeDecodeError:
             pass
 
     # Test for various common encodings.
@@ -333,3 +169,14 @@ def filter_ascii(text):
     if isinstance(text, list):
         return [filter_ascii(x) for x in text]
     return "".join((x if is_standard_ascii(x) else "?") for x in text)
+
+def is_ctrl_char(x, y=None):
+    "Returns whether X is an ASCII control character"
+    if y is None:
+        y = ord(x)
+    return 0 <= y <= 31 and y not in (9, 10, 13) # TAB, LF, CR
+
+def is_standard_ascii(x):
+    """Returns whether X is a standard, non-control ASCII character"""
+    y = ord(x)
+    return not (is_ctrl_char(x, y) or y > 126)
