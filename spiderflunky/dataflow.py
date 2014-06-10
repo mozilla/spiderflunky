@@ -17,19 +17,6 @@ def assignments(ast):
         (node['type'] == 'VariableDeclarator' and node['init'] is not None))
 
 
-def scope_of(symbol_name, in_node):
-    """Return the AST node where the variable named ``symbol_name``, occurring
-    in node ``in_node`` is defined."""
-    # TODO: Find formal params, lets, and window.* (and navigator.*? Anything
-    # else magic? Ugh, and you can stick refs to window in things. Is that
-    # going to be a problem?)
-
-    for node in in_node.scope_chain():
-        if symbol_name in node.scope():
-            return node
-    return node  # global
-
-
 # TODO: We'll also have to watch when objects are created. You can put
 # functions in those. We'll have to track what symbol the objects are initially
 # assigned to and where they flow from there. Then observe when somebody
