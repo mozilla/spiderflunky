@@ -1,5 +1,3 @@
-from collections import namedtuple
-
 from inspect import isclass
 from more_itertools import first
 
@@ -18,12 +16,13 @@ class Node(dict):
             yield node
             node = node.get('_parent')
 
-    def walk_down(self, skip=lambda n: False):
-        """Yield each node from here downward, myself included, in depth-first
+    def walk_down(self, skip=lambda n: False, include_self=True):
+        """Yield each (depth, node) from here downward, myself included, in depth-first
         pre-order.
 
         :arg skip: A predicate decribing nodes to not descend into. We always
             return ourselves, even if the predicate says to skip us.
+        :arg include_self: A flag for including the root in the walk down.
 
         The AST we get from Reflect.parse is somewhat unsatisfying. It's not a
         uniform tree shape; it seems to have already been turned into more
@@ -31,19 +30,17 @@ class Node(dict):
         depending on node type.
 
         """
-        yield self
+        if include_self:
+            yield 0, self
         for child in self.children():
             if not skip(child):
                 # Just a "yield from":
-                for ret in child.walk_down(skip=skip):
-                    yield ret
+                for depth, ret in child.walk_down(skip=skip):
+                    yield depth+1, ret
 
     def _children(self):
-        body = self.get('body', [])
-        if not isinstance(body, list):
-            # For some node types, 'body' is a list; for others, an object.
-            body = [body]
-        return body
+        # fail, there is no generic body attr.
+        raise NotImplementedError
 
     def children(self):
         """Return my children, accounting for variations in where children are
@@ -86,6 +83,9 @@ class Node(dict):
                 return node
         return node  # global
 
+    def __str__(self):
+        return self['type']
+
 
 class VariableDeclaration(Node):
     def _children(self):
@@ -96,6 +96,10 @@ class ExpressionStatement(Node):
     def _children(self):
         return [self['expression']]
 
+class AssignmentExpression(Node):
+    def _children(self):
+        return [self['left'], self['right']]
+
 
 class IfStatement(Node):
     def _children(self):
@@ -104,6 +108,13 @@ class IfStatement(Node):
             ret.append(self['alternate'])
         return ret
 
+class Identifier(Node):
+    def _children(self):
+        return None
+
+class Literal(Node):
+    def _children(self):
+        return None
 
 class FunctionDeclaration(Node):
     def scope(self):
@@ -116,11 +127,14 @@ class FunctionDeclaration(Node):
             # Find all the var decls within me, but don't go within any other
             # functions. This implements hoisting.
             self['_scope'] = set(
-                node['id']['name'] for node in self.walk_down(
+                node['id']['name'] for _, node in self.walk_down(
                     skip=lambda n: n['type'] == 'FunctionDeclaration')
                 if node['type'] == 'VariableDeclarator') | \
                 set(param['name'] for param in self['params'])
         return self['_scope']
+
+    def _children(self):
+        raise NotImplementedError
 
 
 class Program(Node):
@@ -137,7 +151,7 @@ class Program(Node):
             """Add an ``_id`` key to each node in me so we can represent graphs of
             them economically, and build a map of those IDs to the nodes."""
             ret = {}
-            for node in ast.walk_down():
+            for _, node in ast.walk_down():
                 identity = node['_id'] = id(node)
                 ret[identity] = node
             return ret
@@ -155,9 +169,17 @@ class Program(Node):
         # Arguable.
         return set()
 
+    def __str__(self,):
+        return "{0}\n".format(super(Program, self).__str__())+"\n".join(
+            (" " * i + str(x) for i, x in self.walk_down(include_self=False)))
+
+    def _children(self,):
+        return self['body']
+
 
 NODE_TYPES = {cls.__name__:cls for cls in globals().values() if
               isclass(cls) and issubclass(cls, dict)}
+
 def make_node(d):
     """Construct the right kind of Node for a raw Reflect.parse node."""
     return NODE_TYPES.get(d.get('type'), Node)(d)

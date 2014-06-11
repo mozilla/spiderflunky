@@ -33,7 +33,7 @@ def parse(code, **kwargs):
 
 ERROR_CODE = 100
 
-def raw_parse(code, shell='js', object_hook=make_node, error_code=ERROR_CODE):
+def raw_parse(code, shell='js', object_hook=make_node):
     """Return an AST of the JS passed in ``code`` in native Reflect.parse
     format
 
@@ -58,7 +58,7 @@ def raw_parse(code, shell='js', object_hook=make_node, error_code=ERROR_CODE):
             "line_number":e.lineNumber
         }));
         quit(%d);
-    }""" % (json.dumps(temp.name), error_code)
+    }""" % (json.dumps(temp.name), ERROR_CODE)
 
     try:
         cmd = [shell, "-e", data]
@@ -80,7 +80,7 @@ def raw_parse(code, shell='js', object_hook=make_node, error_code=ERROR_CODE):
         parsed = json.loads(data, strict=False, object_hook=object_hook)
 
         if error_code == ERROR_CODE:
-            if "error" in parsed and parsed["error"]:
+            if parsed.get("error"):
                 if parsed["error_message"].startswith("ReferenceError: Reflect"):
                     raise RuntimeError("Spidermonkey version too old; "
                                        "1.8pre+ required; error='%s'; "
