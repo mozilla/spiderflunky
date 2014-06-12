@@ -1,24 +1,41 @@
-from inspect import isclass
-from more_itertools import first
+"""Contains code pertaining to the JS AST representation. This is generated
+based on the Mozilla Parser API at import time.
 
-class Node(dict):
+"""
+
+from pyquery import PyQuery
+from parsimonious.grammar import Grammar
+from parsimonious.nodes import NodeVisitor
+from parsimonious.exceptions import ParseError
+from more_itertools import first
+from toposort import toposort_flatten
+from itertools import repeat
+import sys
+import pkg_resources
+
+
+class BaseNode(dict):
     """A wrapper around a native Reflect.parse dict providing some convenience
     methods and some caching of expensive computations
 
     Importing a zillion helper functions into every module is a pain.
 
     """
+    def __init__(self, parent, *args, **kwargs):
+        dict.__init__(self, *args, **kwargs)
+        self.parent = parent
+
     def walk_up(self):
         """Yield each node from here to the root of the tree, starting with
         myself."""
         node = self
         while node:
             yield node
-            node = node.get('_parent')
+            node = node.parent
 
     def walk_down(self, skip=lambda n: False, include_self=True):
-        """Yield each (depth, node) from here downward, myself included, in depth-first
-        pre-order.
+        """Yield each node from here downward, myself included,
+        in depth-first pre-order.
 
         :arg skip: A predicate decribing nodes to not descend into. We always
             return ourselves, even if the predicate says to skip us.
@@ -31,35 +48,41 @@ class Node(dict):
 
         """
         if include_self:
-            yield 0, self
+            yield self
         for child in self.children():
-            if not skip(child):
-                # Just a "yield from":
-                for depth, ret in child.walk_down(skip=skip):
-                    yield depth+1, ret
+            if skip(child):
+                continue
+            # Just a "yield from":
+            for ret in child.walk_down(skip=skip):
+                yield ret
 
     def _children(self):
-        # fail, there is no generic body attr.
-        raise NotImplementedError
+        return []
 
     def children(self):
         """Return my children, accounting for variations in where children are
-        stored in each node type."""
+        stored in each node type.
+
+        """
         return self._children() or []
 
     def nearest_scope(self):
         """Return the closest containing scope, constructing and caching it
-        first if necessary."""
+        first if necessary.
+
+        """
         return self.nearest_scope_holder().scope()
 
     def scope_chain(self):
-        """Yield each scope-defining node from myself upward."""
+        """Yield each scope-defining node from myself upward.
+
+        """
         node = self.nearest_scope_holder()
         while True:
             yield node
-            if node['type'] == 'Program':
+            if isinstance(node, Program):
                 break
-            node = node['_parent'].nearest_scope_holder()
+            node = node.parent.nearest_scope_holder()
 
     def nearest_scope_holder(self):
         """Return the nearest node that can have its own scope, potentially
@@ -68,118 +91,204 @@ class Node(dict):
         This will be either a FunctionDeclaration or a Program (for now).
 
         """
-        return first(n for n in self.walk_up() if n['type'] in
-                     ['FunctionDeclaration', 'Program'])
+        return first(n for n in self.walk_up() if
+                     isinstance(n, (FunctionDeclaration, Program)))
 
     def scope_of(self, symbol_name):
         """Return the nearest enclosing AST node (including myself) where the
-        variable named ``symbol_name`` is defined."""
-        # TODO: Find formal params, lets, and window.* (and navigator.*?
-        # Anything else magic? Ugh, and you can stick refs to window in things.
-        # Is that going to be a problem?)
+        variable named ``symbol_name`` is defined.
 
+        """
         for node in self.scope_chain():
             if symbol_name in node.scope():
                 return node
         return node  # global
 
-    def __str__(self):
-        return self['type']
+    def scope(self,):
+        """Return the set of symbols declared exactly at this node.
 
-
-class VariableDeclaration(Node):
-    def _children(self):
-        return self['declarations']
-
-
-class ExpressionStatement(Node):
-    def _children(self):
-        return [self['expression']]
-
-class AssignmentExpression(Node):
-    def _children(self):
-        return [self['left'], self['right']]
-
-
-class IfStatement(Node):
-    def _children(self):
-        ret = [self['test'], self['consequent']]
-        if self['alternate']:
-            ret.append(self['alternate'])
-        return ret
-
-class Identifier(Node):
-    def _children(self):
-        return None
-
-class Literal(Node):
-    def _children(self):
-        return None
-
-class FunctionDeclaration(Node):
-    def scope(self):
-        """Return the set of symbols declared exactly at this node."""
-        # We store a set of symbols at each node that can hold a scope, except
-        # that we don't bother for the Program (global) scope. It holds
-        # everything we couldn't find elsewhere.
-
-        if '_scope' not in self:  # could store this in an instance var
-            # Find all the var decls within me, but don't go within any other
-            # functions. This implements hoisting.
-            self['_scope'] = set(
-                node['id']['name'] for _, node in self.walk_down(
-                    skip=lambda n: n['type'] == 'FunctionDeclaration')
-                if node['type'] == 'VariableDeclarator') | \
-                set(param['name'] for param in self['params'])
-        return self['_scope']
-
-    def _children(self):
-        raise NotImplementedError
-
-
-class Program(Node):
-    """A Reflect.parse AST with some other handy properties
-
-    A Program is considered to be immutable once finalize() is called, though
-    we may continue to make annotations on it for speed.
-
-    """
-    def finalize(self):
-        """Add parent pointers to my nodes, and assemble a map so we can
-        reference nodes by ID."""
-        def _add_ids(ast):
-            """Add an ``_id`` key to each node in me so we can represent graphs of
-            them economically, and build a map of those IDs to the nodes."""
-            ret = {}
-            for _, node in ast.walk_down():
-                identity = node['_id'] = id(node)
-                ret[identity] = node
-            return ret
-
-        def _add_parent_refs(node):
-            """Add parent pointers to each node in me."""
-            for child in node.children():
-                child['_parent'] = node
-                _add_parent_refs(child)
-
-        self.by_id = _add_ids(self)
-        _add_parent_refs(self)
-
-    def scope(self):
-        # Arguable.
+        """
         return set()
 
-    def __str__(self,):
-        return "{0}\n".format(super(Program, self).__str__())+"\n".join(
-            (" " * i + str(x) for i, x in self.walk_down(include_self=False)))
 
-    def _children(self,):
-        return self['body']
+def _clean(text):
+    return text.replace(u'\xa0', u' ')
 
 
-NODE_TYPES = {cls.__name__:cls for cls in globals().values() if
-              isclass(cls) and issubclass(cls, dict)}
+def _get_specs(parser, parser_api_htm):
+    specs = (_clean(elem.text) for elem in PyQuery(parser_api_htm)('pre'))
+    visitor = SpecVisitor()
+    for spec in specs:
+        try:
+            yield visitor.visit(parser.parse(spec))
+        except ParseError:
+            pass
 
-def make_node(d):
-    """Construct the right kind of Node for a raw Reflect.parse node."""
-    return NODE_TYPES.get(d.get('type'), Node)(d)
+
+def get_specs(*args, **kwargs):
+    """Return a list of specs (the results of the SpecVisitor)
+    based on Mozilla ParserAPI.
+
+    parser: parser for the grammar
+    filename: location of the Mozilla Parser API
+    """
+    return list(_get_specs(*args, **kwargs))
+
+
+def dependency_order(specs):
+    dep_map = {name: set(parents) for (name, parents, _) in specs}
+    return toposort_flatten(dep_map)
+
+
+def get_class_map(specs):
+    """Based on a list of specifications, return a mapping name->cls
+
+    """
+    dep_order = dependency_order(specs)
+    spec_map = {name: (parents, vals) for name, parents, vals in specs}
+    class_map = {}
+    for name in dep_order:
+        class_map[name] = _node_class_factory(class_map, name, *spec_map[name])
+    return class_map
+
+
+def _flatten(lis):
+    """Flattens nonuniform nested iterators.
+
+    """
+    # based on http://stackoverflow.com/a/2158532
+    for elem in lis:
+        if isinstance(elem, list) and not isinstance(elem, basestring):
+            for sub in _flatten(elem):
+                yield sub
+        else:
+            yield elem
+
+
+def function_scope(self):
+    """Return the set of symbols declared exactly at this node.
+
+    """
+    # We store a set of symbols at each node that can hold a scope, except
+    # that we don't bother for the Program (global) scope. It holds
+    # everything we couldn't find elsewhere.
+
+    if '_scope' not in self:  # could store this in an instance var
+        # Find all the var decls within me, but don't go within any other
+        # functions. This implements hoisting.
+        self['_scope'] = set(
+            node['id']['name'] for node in self.walk_down(
+                skip=lambda n: isinstance(n, FunctionDeclaration))
+            if isinstance(node, VariableDeclarator)) | \
+            set(param['name'] for param in self['params'])
+    return self['_scope']
+
+
+def _node_class_factory(class_map, name, parents, fields):
+    """Returns a class representing an AST node.
+
+    """
+    # Could perhaps be replaced by an explicit MetaClass
+    def _children(self):
+        fields_vals = filter(lambda val: isinstance(val, BaseNode),
+                             _flatten((self[f] for f in fields)))
+        return fields_vals
+
+    __dict__ = {'_children': _children}
+    if "params" in fields:
+        __dict__['scope'] = function_scope
+
+    bases = tuple(map(class_map.get, parents)) if parents else (BaseNode,)
+    return type(str(name), bases, __dict__)
+
+
+def set_parents(root):
+    """Sets the parent attribute for all nodes in the tree.
+    Root's parent is None
+
+    """
+    queue = [(root, None)]
+    while queue:
+        node, parent = queue.pop()
+        node.parent = parent
+        queue.extend(zip(node.children(), repeat(node)))
+
+
+API_GRAMMAR = r"""
+start = _ interface _
+interface = "interface" __ id _ inherit? _ "{" _ attrs? _ "}"
+
+ops = "\"" op "\"" (_ "|" _ ops)?
+op = ~r'([^{}"\s])+'
+
+inherit = "<:" __ parents
+parents = id _ ("," _ parents)?
+
+attr = id _ ":" _ vals
+attrs = attr _ ";" _ attrs?
+
+vals = val (_ "|" _ vals)?
+val = "string" / "null" / "boolean" / dict / list / qid / uint / id
+qid = '"' id '"'
+list = "[" _ vals _ "]"
+dict = "{" _ dict_attrs _ "}"
+dict_attrs = attr _ ("," _ dict_attrs)?
+
+uint = "uint32" (_ op _ digit)?
+
+id = ~r"[A-Za-z]+"
+digit = ~r"[0-9]+"
+_ = ~r"\s*"
+__ = ~r"\s+"
+"""
+
+
+class SpecVisitor(NodeVisitor):
+    """Implements a NodeVisitor for the Mozilla Parser API
+    Returns (name of interface, parents, fields)
+
+    """
+    def visit_start(self, node, children):
+        return children[1]
+
+    def visit_interface(self, node, children):
+        name = children[2]
+        inherit = children[4][0] if children[4] else []
+        attrs = children[8][0] if children[8] else []
+        return (name, inherit, attrs)
+
+    def visit_inherit(self, _, (__, ___, parents)):
+        return parents
+
+    def visit_parents(self, _, (name, __, next_parent)):
+        return [name]
+
+    def visit_attrs(self, _, (attr, __, ___, ____, attrs)):
+        return [attr] + (attrs[0] if attrs else [])
+
+    def visit_attr(self, _, children):
+        # task throw away attr if its static like type
+        return children[0]
+
+    def visit_id(self, node, _):
+        return node.match.group()
+
+    def generic_visit(self, _, visited_children):
+        return visited_children
+
+API_PARSER = Grammar(API_GRAMMAR)
+
+
+def node_hook(json_dict):
+    """This is a object hook for the json loads function.
+
+    """
+    return CLASS_MAP.get(json_dict.get('type'), BaseNode)(None, json_dict)
+
+# Inject classes from spec into module
+PARSER_API_HTM = pkg_resources.resource_string(__name__, "Parser_API.htm")
+
+CLASS_MAP = get_class_map(get_specs(API_PARSER, PARSER_API_HTM))
+THIS_MODULE = sys.modules[__name__]
+for cls_name, cls in CLASS_MAP.items():
+    setattr(THIS_MODULE, cls_name, cls)

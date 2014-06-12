@@ -1,0 +1,1654 @@
+<!DOCTYPE html>
+<html lang="en-US" dir="ltr" class="redesign no-js">
+<head prefix="og: http://ogp.me/ns#">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <script>(function(d) { d.className = d.className.replace(/\bno-js/, ''); })(document.documentElement);</script>
+          <script src="//cdn.optimizely.com/js/237572123.js"></script>
+  
+    <title>Parser API - Mozilla | MDN</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="index, follow">
+  <link rel="home" href="/en-US/">
+  <link rel="copyright" href="#copyright">
+
+  <link rel="stylesheet" href="//mozorg.cdn.mozilla.net/media/css/tabzilla-min.css">
+              <link rel="stylesheet" media="all" href="https://developer.cdn.mozilla.net/media/css/mdn-min.css?build=410b053" />
+      
+    <link rel="stylesheet" media="all" href="https://developer.cdn.mozilla.net/media/css/wiki-min.css?build=410b053" />
+
+          <link rel="stylesheet" type="text/css"
+            href="/en-US/docs/Template:CustomCSS?raw=1" />
+    
+    
+  <!-- common social tags -->
+    <meta property="og:type" content="website">
+  <meta property="og:image" content="https://developer.mozilla.org/media/redesign/img/opengraph-logo.png">
+  <meta property="og:site_name" content="Mozilla Developer Network">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:image" content="https://developer.mozilla.org/media/redesign/img/opengraph-logo.png">
+  <meta name="twitter:site" content="@NewOnMDN">
+  <meta name="twitter:creator" content="@NewOnMDN">
+
+  <link rel="search" type="application/opensearchdescription+xml" href="https://developer.mozilla.org/en-US/search/xml" title="Mozilla Developer Network">
+
+  <!-- third-generation iPad with high-resolution Retina display: -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://developer.cdn.mozilla.net/media/redesign/img/favicon144.png">
+  <!-- iPhone with high-resolution Retina display: -->
+  <link rel="apple-touch-icon-precomposed" sizes="114x114" href="https://developer.cdn.mozilla.net/media/redesign/img/favicon114.png">
+  <!-- first- and second-generation iPad: -->
+  <link rel="apple-touch-icon-precomposed" sizes="72x72" href="https://developer.cdn.mozilla.net/media/redesign/img/favicon72.png">
+  <!-- non-Retina iPhone, iPod Touch, and Android 2.1+ devices: -->
+  <link rel="apple-touch-icon-precomposed" href="https://developer.cdn.mozilla.net/media/redesign/img/favicon57.png">
+  <!-- basic favicon -->
+  <link rel="shortcut icon" href="https://developer.cdn.mozilla.net/media/redesign/img/favicon32.png">
+
+  <!--[if IE]>
+  <meta http-equiv="imagetoolbar" content="no">
+  <script src="https://developer.cdn.mozilla.net/media/js/libs/html5.js"></script>
+  <![endif]-->
+
+    <link rel="alternate" type="application/json" href="/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API$json">
+  <link rel="canonical" href="https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API" >
+
+            <link rel="alternate" hreflang="zh-CN" href="/zh-CN/docs/Mozilla/Projects/SpiderMonkey/Parser_API" title="Parser API">
+      
+  <!-- document-specific social tags -->
+  <meta property="og:title" content="Parser API">
+  <meta property="og:url" content="https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API">
+  <meta name="twitter:url" content="https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API">
+  <meta name="twitter:title" content="Parser API">
+    <meta property="og:description" content="Recent builds of the standalone SpiderMonkey shell include a reflection of the SpiderMonkey parser, made available as a JavaScript API.">
+  <meta name="description" content="Recent builds of the standalone SpiderMonkey shell include a reflection of the SpiderMonkey parser, made available as a JavaScript API.">
+  <meta name="twitter:description" content="Recent builds of the standalone SpiderMonkey shell include a reflection of the SpiderMonkey parser, made available as a JavaScript API.">
+  
+      <script type="text/javascript">
+
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-36116321-5', 'mozilla.org');
+    
+        	ga('set', 'docs navigator', 'Yes');
+    
+            ga('set', 'top contributors', 'Yes');
+    
+    (function() {
+        // http://cfsimplicity.com/61/removing-analytics-clutter-from-campaign-urls
+        var win = window;
+        var removeUtms = function(){
+            var location = win.location;
+            if (location.hash.indexOf('utm') != -1) {
+                var anchor = location.hash.match(/#(?!utm)[^&]+/);
+                anchor = anchor ? anchor[0] : '';
+                if(!anchor && win.history.replaceState){
+                    history.replaceState({}, '', location.pathname + location.search);
+                } else {
+                    location.hash = anchor;
+                }
+            }
+        };
+
+        ga('send', 'pageview', removeUtms(win.location + ''));
+    })();
+</script>
+  <script type="text/javascript">var NREUMQ=NREUMQ||[];NREUMQ.push(["mark","firstbyte",new Date().getTime()]);</script></head>
+<body data-slug="Mozilla/Projects/SpiderMonkey/Parser_API" contextmenu="edit-history-menu" class="document  ">
+
+  <script type="text/javascript">
+    (function(){
+  var FLAGS = {
+    'derby_closed': true,'ga_outbound_links': true,'kumaediting': false,'page_move': false,'promote_script': false,'search_doc_navigator': true,'top_contributors': true
+    },
+    SWITCHES = {
+    'wiki_error_on_delete': false,'wiki_force_immediate_rendering': false
+    },
+    SAMPLES = {
+    
+    };
+  window.waffle = {
+    "flag_is_active": function waffle_flag(flag_name) {
+      
+      return !!FLAGS[flag_name];
+    },
+    "switch_is_active": function waffle_switch(switch_name) {
+      
+      return !!SWITCHES[switch_name];
+    },
+    "sample_is_active": function waffle_sample(sample_name) {
+      
+      return !!SAMPLES[sample_name];
+    },
+    "FLAGS": FLAGS,
+    "SWITCHES": SWITCHES,
+    "SAMPLES": SAMPLES
+  };
+})();
+
+      // This represents the site configuration
+  window.mdn = {
+    build: '410b053',
+    // Properties and settings for CKEditor will go here
+    ckeditor: {},
+    // Feature test results and methods will be placed here
+    features: {},
+    // Ensures gettext always returns something, is always set
+    gettext: function(x) { return x; },
+    // The path to media (images, CSS, JS) in MDN
+    mediaPath: 'https://developer.cdn.mozilla.net/media/',
+    // Wiki-specific settings will be placed here
+    wiki: {
+      autosuggestTitleUrl: '/en-US/docs/get-documents'
+    }
+  };
+</script>
+    <div class="global-notice">
+    <div class="wrap center">
+              <p><bdi>Help us improve the quality of our code samples by answering this brief survey: <a href="http://bit.ly/sample-demo">http://bit.ly/sample-demo</a></bdi></p>
+          </div>
+  </div>
+
+
+  
+  <ul id="nav-access">
+    <li><a href="#document-main" id="skip-main">Skip to main content</a></li>
+    <li><a id="skip-language" href="#language">Select language</a></li>
+          <li><a href="#q" id="skip-search">Skip to search</a></li>
+      </ul>
+
+  <!-- Header -->
+  <header id="main-header"><div class="center">
+
+    <div class="clear header-login">
+      <a href="//www.mozilla.org/" id="tabzilla" class="no-track">mozilla</a>
+              
+    <form class="browserid" action="/en-US/users/browserid_verify" method="POST">
+    <input id="next" name="next" type="hidden" value="/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API"/>
+    <input required="required" type="hidden" name="assertion" id="id_assertion" />
+            </form>
+
+                    <ul class="user-state signed-out">
+                <li class="user-signin menu">
+
+                    <a href="#" class="persona-button persona-login" data-next="/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API">
+                        <span class="persona-icon"><i aria-hidden="true"></i></span>
+                        <span class="signin">Sign in with Persona</span>
+                    </a>
+                </li>
+            </ul>
+                  </div>
+
+    <a href="/en-US/" class="logo">Mozilla Developer Network</a>
+
+    <nav id="main-nav" role="navigation"><ul><li><a href="/en-US/docs/Zones">Zones<i aria-hidden="true" class="icon-caret-down"></i></a>
+
+        <div class="submenu submenu-single" id="nav-zones-submenu">
+          <div class="submenu-column">
+            <ul>
+              <li><a href="/en-US/Add-ons">Add-ons</a></li>
+              <li><a href="/en-US/docs/Apps">App Center</a></li>
+              <li><a href="/en-US/docs/Firefox">Firefox</a></li>
+              <li><a href="/en-US/Marketplace">Firefox Marketplace</a></li>
+              <li><a href="/en-US/docs/Firefox_OS">Firefox OS</a></li>
+              <li><a href="/en-US/docs/Persona">Persona</a></li>
+            </ul>
+          </div>
+        </div>
+      </li><li><a href="/en-US/docs/Web">Web Platform<i aria-hidden="true" class="icon-caret-down"></i></a>
+
+        <div class="submenu" id="nav-platform-submenu">
+          <div class="submenu-column">
+            <div class="title">Technologies</div>
+            <ul>
+              <li><a href="/en-US/docs/Web/HTML">HTML</a></li>
+              <li><a href="/en-US/docs/Web/CSS">CSS</a></li>
+              <li><a href="/en-US/docs/Web/JavaScript">JavaScript</a></li>
+              <li><a href="/en-US/docs/Web/Guide/Graphics">Graphics</a></li>
+              <li><a href="/en-US/docs/Web/API">APIs / DOM</a></li>
+              <li><a href="/en-US/Apps">Apps</a></li>
+              <li><a href="/en-US/docs/Web/MathML">MathML</a></li>
+            </ul>
+          </div><div class="submenu-column last">
+            <div class="title">References & Guides</div>
+            <ul>
+              <li><a href="/en-US/docs/Web/Tutorials">Tutorials</a></li>
+              <li><a href="/en-US/docs/Web/Reference">References</a></li>
+              <li><a href="/en-US/docs/Web/Guide">Developer Guides</a></li>
+              <li><a href="/en-US/docs/Web/Accessibility">Accessibility</a></li>
+              <li><a href="/en-US/demos/">Demos</a></li>
+              <li><a href="/en-US/docs/Web">...more docs</a></li>
+            </ul>
+          </div>
+        </div>
+      </li><li><a href="/en-US/docs/Tools">Tools</a></li><li><a href="/en-US/demos/">Demos</a></li><li><a href="/en-US/docs/Mozilla/Connect">Connect</a></li><li class="main-nav-search"><form action="/en-US/search" method="get" role="search">
+        <div class="search-wrap">
+          <label for="main-q" class="offscreen">Search</label>
+          <input type="search" id="main-q" name="q" data-placeholder="SEARCH" data-value="" value="" />
+          <span class="search-trigger"><i aria-hidden="true" class="icon-search"></i></span>&nbsp;
+          <button type="submit" class="offscreen">Search</button>
+        </div>
+      </form></li></ul></nav>
+  </div></header>
+
+  <!-- Content will go here -->
+  <main id="content"><div class="center clear">
+  
+   <!-- end is_zone -->
+
+
+    <div class="wiki-main-content" id="document-main"><div class="center">
+            <div class="article-meta">
+        <!-- action buttons -->
+                  <ul class="page-buttons"><li><button id="languages-menu" class="transparent" aria-haspopup="true" aria-owns="languages-menu-submenu" aria-expanded="false"><span>Languages</span><i aria-hidden="true" class="icon-globe"></i></button>
+
+        <div class="submenu" id="languages-menu-submenu">
+          <div class="submenu-column">
+            <ul id="translations">
+                                                <li><bdi><a rel="internal" href="/zh-CN/docs/Mozilla/Projects/SpiderMonkey/Parser_API" title="Parser API">中文 (简体)</a></bdi></li>
+                              
+                              <li><a href="/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API$locales">Add a translation</a></li>
+                          </ul>
+          </div>
+        </div></li><li class="page-buttons-edit"><a href="/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API$edit" class="button">Edit<i aria-hidden="true" class="icon-pencil"></i></a></li><li><button id="advanced-menu" class="only-icon" aria-haspopup="true" aria-owns="advanced-menu-submenu" aria-expanded="false"><span>Advanced</span><i aria-hidden="true" class="icon-cog"></i></button>
+
+        <div class="submenu" id="advanced-menu-submenu">
+          <!-- this page -->
+          <div class="submenu-column">
+            <div class="title">Advanced</div>
+            <ul>
+                <li><a href="/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API$history">History</a></li>
+                                                                
+                
+                                
+                                                                <li class="page-print"><a href="#" onclick="return window.print();"  title="Print page">Print this page</a></li>
+            </ul>
+          </div>
+        </div>
+  </li></ul>
+
+        <!-- crumbs -->
+          <nav class="crumbs" role="navigation"><ol xmlns:v="http://rdf.data-vocabulary.org/#" aria-label="breadcrumbs">
+    <li typeof="v:Breadcrumb"><a href="/en-US" rel="v:url" property="v:title">MDN</a></li>
+          <li class="crumb" typeof="v:Breadcrumb"><a href="/en-US/docs/Mozilla" rel="v:url" property="v:title">Mozilla</a></li>
+          <li class="crumb" typeof="v:Breadcrumb"><a href="/en-US/docs/Mozilla/Projects" rel="v:url" property="v:title">Projects</a></li>
+          <li class="crumb" typeof="v:Breadcrumb"><a href="/en-US/docs/Mozilla/Projects/SpiderMonkey" rel="v:url" property="v:title">SpiderMonkey</a></li>
+        <li class="crumb" typeof="v:Breadcrumb" property="v:title">Parser API</li>
+  </ol></nav>
+      </div>
+
+      <!-- heading -->
+      <div id="wiki-document-head" class="document-head">
+                  <span class="from-search-previous-box">
+            <a class="button from-search-previous only-icon disabled" title="Previous Search Result" data-empty-title="No Previous Search Result"><i aria-hidden="true" class="icon-chevron-left"></i></a>
+          </span>
+          <span class="from-search-navigate-wrap">
+            <a href="#" class="from-search-navigate"><span class="from-search-navigate-up"><i aria-hidden="true" class="icon-double-angle-up"></i></span><span class="from-search-navigate-down"><i aria-hidden="true" class="icon-double-angle-down"></i></span></a>
+          </span>
+          <div class="from-search-toc">
+            <span class="title">Your Search Results</span>
+            <ol></ol>
+          </div>
+          <span class="from-search-next-box">
+            <a class="button from-search-next only-icon disabled" title="Next Search Result" data-empty-title="No Previous Search Result"><i aria-hidden="true" class="icon-chevron-right"></i></a>
+          </span>
+                  <h1>Parser API</h1>
+                <div class="contributor-avatars">
+            <span class="quickstat">
+            by 22 contributors:            </span>
+            <ul>
+                        <li>
+                <a href="/en-US/profiles/Dherman" title="View profile: Dherman">
+                <noscript data-class="avatar" data-alt="Dherman" data-src="https://secure.gravatar.com/avatar/c279f8c671755d87d5f02efea5fd5a58?s=34&amp;r=pg&amp;d=https%3A%2F%2Fdeveloper.cdn.mozilla.net%2Fmedia%2F%2Fimg%2Favatar.png">Dherman</noscript></a>
+                </li>
+                        <li>
+                <a href="/en-US/profiles/Sheppy" title="View profile: Sheppy">
+                <noscript data-class="avatar" data-alt="Sheppy" data-src="https://secure.gravatar.com/avatar/945076feb88f2d7003891ffbf06f32bf?s=34&amp;r=pg&amp;d=https%3A%2F%2Fdeveloper.cdn.mozilla.net%2Fmedia%2F%2Fimg%2Favatar.png">Sheppy</noscript></a>
+                </li>
+                        <li>
+                <a href="/en-US/profiles/Wladimir_Palant" title="View profile: Wladimir_Palant">
+                <noscript data-class="avatar" data-alt="Wladimir_Palant" data-src="https://secure.gravatar.com/avatar/7806629160a492b05d21fd738953a4cf?s=34&amp;r=pg&amp;d=https%3A%2F%2Fdeveloper.cdn.mozilla.net%2Fmedia%2F%2Fimg%2Favatar.png">Wladimir_Palant</noscript></a>
+                </li>
+                        <li>
+                <a href="/en-US/profiles/sajidraza" title="View profile: sajidraza">
+                <noscript data-class="avatar" data-alt="sajidraza" data-src="https://secure.gravatar.com/avatar/d7de947267d859bb5af31f4b81e1a63e?s=34&amp;r=pg&amp;d=https%3A%2F%2Fdeveloper.cdn.mozilla.net%2Fmedia%2F%2Fimg%2Favatar.png">sajidraza</noscript></a>
+                </li>
+                        <li>
+                <a href="/en-US/profiles/jswisher" title="View profile: jswisher">
+                <noscript data-class="avatar" data-alt="jswisher" data-src="https://secure.gravatar.com/avatar/38185c2812cbcae186ebbe4a82910661?s=34&amp;r=pg&amp;d=https%3A%2F%2Fdeveloper.cdn.mozilla.net%2Fmedia%2F%2Fimg%2Favatar.png">jswisher</noscript></a>
+                </li>
+                        <li>
+                <a href="/en-US/profiles/Jed" title="View profile: Jed">
+                <noscript data-class="avatar" data-alt="Jed" data-src="https://secure.gravatar.com/avatar/7b72d5a18ab92129692e97a76a153fe0?s=34&amp;r=pg&amp;d=https%3A%2F%2Fdeveloper.cdn.mozilla.net%2Fmedia%2F%2Fimg%2Favatar.png">Jed</noscript></a>
+                </li>
+                        <li>
+                <a href="/en-US/profiles/RReverser" title="View profile: RReverser">
+                <noscript data-class="avatar" data-alt="RReverser" data-src="https://secure.gravatar.com/avatar/016775e869b4a6c2e13e0e938b974016?s=34&amp;r=pg&amp;d=https%3A%2F%2Fdeveloper.cdn.mozilla.net%2Fmedia%2F%2Fimg%2Favatar.png">RReverser</noscript></a>
+                </li>
+                        <li>
+                <a href="/en-US/profiles/fscholz" title="View profile: fscholz">
+                <noscript data-class="avatar" data-alt="fscholz" data-src="https://secure.gravatar.com/avatar/e24391c9174352988d819a9b9ea77c9e?s=34&amp;r=pg&amp;d=https%3A%2F%2Fdeveloper.cdn.mozilla.net%2Fmedia%2F%2Fimg%2Favatar.png">fscholz</noscript></a>
+                </li>
+                        <li>
+                <a href="/en-US/profiles/victorporof" title="View profile: victorporof">
+                <noscript data-class="avatar" data-alt="victorporof" data-src="https://secure.gravatar.com/avatar/c72ab0b7b680d66008ea2cd8e474635d?s=34&amp;r=pg&amp;d=https%3A%2F%2Fdeveloper.cdn.mozilla.net%2Fmedia%2F%2Fimg%2Favatar.png">victorporof</noscript></a>
+                </li>
+                        <li>
+                <a href="/en-US/profiles/Mook(as)" title="View profile: Mook(as)">
+                <noscript data-class="avatar" data-alt="Mook(as)" data-src="https://secure.gravatar.com/avatar/1dc2e1d1ce88dd2def094261b241efe0?s=34&amp;r=pg&amp;d=https%3A%2F%2Fdeveloper.cdn.mozilla.net%2Fmedia%2F%2Fimg%2Favatar.png">Mook(as)</noscript></a>
+                </li>
+                        <li>
+                <a href="/en-US/profiles/so_matt_basta" title="View profile: so_matt_basta">
+                <noscript data-class="avatar" data-alt="so_matt_basta" data-src="https://secure.gravatar.com/avatar/c4df87978b1443a5ff3297bd193d39ef?s=34&amp;r=pg&amp;d=https%3A%2F%2Fdeveloper.cdn.mozilla.net%2Fmedia%2F%2Fimg%2Favatar.png">so_matt_basta</noscript></a>
+                </li>
+                        <li>
+                <a href="/en-US/profiles/Marijn" title="View profile: Marijn">
+                <noscript data-class="avatar" data-alt="Marijn" data-src="https://secure.gravatar.com/avatar/f6a35c85d26694e26bb92ea4d4262c77?s=34&amp;r=pg&amp;d=https%3A%2F%2Fdeveloper.cdn.mozilla.net%2Fmedia%2F%2Fimg%2Favatar.png">Marijn</noscript></a>
+                </li>
+                        <li>
+                <a href="/en-US/profiles/Waldo" title="View profile: Waldo">
+                <noscript data-class="avatar" data-alt="Waldo" data-src="https://secure.gravatar.com/avatar/d26a0ca7ae1134e0e1dbdddf82e28929?s=34&amp;r=pg&amp;d=https%3A%2F%2Fdeveloper.cdn.mozilla.net%2Fmedia%2F%2Fimg%2Favatar.png">Waldo</noscript></a>
+                </li>
+                        <li>
+                <a href="/en-US/profiles/SarahWalrus" title="View profile: SarahWalrus">
+                <noscript data-class="avatar" data-alt="SarahWalrus" data-src="https://secure.gravatar.com/avatar/3f65df1f43fb85ec6b8d518a52bdb97d?s=34&amp;r=pg&amp;d=https%3A%2F%2Fdeveloper.cdn.mozilla.net%2Fmedia%2F%2Fimg%2Favatar.png">SarahWalrus</noscript></a>
+                </li>
+                        <li>
+                <a href="/en-US/profiles/Inimino" title="View profile: Inimino">
+                <noscript data-class="avatar" data-alt="Inimino" data-src="https://secure.gravatar.com/avatar/e4e997037a6341e7881816db5ef23ba7?s=34&amp;r=pg&amp;d=https%3A%2F%2Fdeveloper.cdn.mozilla.net%2Fmedia%2F%2Fimg%2Favatar.png">Inimino</noscript></a>
+                </li>
+                        <li>
+                <a href="/en-US/profiles/jbclements" title="View profile: jbclements">
+                <noscript data-class="avatar" data-alt="jbclements" data-src="https://secure.gravatar.com/avatar/58e4e2e80e77fd184971ce9fcbb47ad1?s=34&amp;r=pg&amp;d=https%3A%2F%2Fdeveloper.cdn.mozilla.net%2Fmedia%2F%2Fimg%2Favatar.png">jbclements</noscript></a>
+                </li>
+                        <li>
+                <a href="/en-US/profiles/trevorh" title="View profile: trevorh">
+                <noscript data-class="avatar" data-alt="trevorh" data-src="https://secure.gravatar.com/avatar/1638bc67341673005fa05e5def8f3c4d?s=34&amp;r=pg&amp;d=https%3A%2F%2Fdeveloper.cdn.mozilla.net%2Fmedia%2F%2Fimg%2Favatar.png">trevorh</noscript></a>
+                </li>
+                        <li>
+                <a href="/en-US/profiles/kscarfone" title="View profile: kscarfone">
+                <noscript data-class="avatar" data-alt="kscarfone" data-src="https://secure.gravatar.com/avatar/89c1e54a9703125168e40d22316d2b49?s=34&amp;r=pg&amp;d=https%3A%2F%2Fdeveloper.cdn.mozilla.net%2Fmedia%2F%2Fimg%2Favatar.png">kscarfone</noscript></a>
+                </li>
+                        <li>
+                <a href="/en-US/profiles/jcsmnt0" title="View profile: jcsmnt0">
+                <noscript data-class="avatar" data-alt="jcsmnt0" data-src="https://secure.gravatar.com/avatar/03287669133559fcce05cd09e9cbba2d?s=34&amp;r=pg&amp;d=https%3A%2F%2Fdeveloper.cdn.mozilla.net%2Fmedia%2F%2Fimg%2Favatar.png">jcsmnt0</noscript></a>
+                </li>
+                        <li>
+                <a href="/en-US/profiles/berkerpeksag" title="View profile: berkerpeksag">
+                <noscript data-class="avatar" data-alt="berkerpeksag" data-src="https://secure.gravatar.com/avatar/df8e51d7618d5ed7ccbbc8dea9a9afee?s=34&amp;r=pg&amp;d=https%3A%2F%2Fdeveloper.cdn.mozilla.net%2Fmedia%2F%2Fimg%2Favatar.png">berkerpeksag</noscript></a>
+                </li>
+                        <li>
+                <a href="/en-US/profiles/mattbasta" title="View profile: mattbasta">
+                <noscript data-class="avatar" data-alt="mattbasta" data-src="https://secure.gravatar.com/avatar/3b9ee98650c2dd03c03cd3ce455d2419?s=34&amp;r=pg&amp;d=https%3A%2F%2Fdeveloper.cdn.mozilla.net%2Fmedia%2F%2Fimg%2Favatar.png">mattbasta</noscript></a>
+                </li>
+                        <li>
+                <a href="/en-US/profiles/michaelficarra" title="View profile: michaelficarra">
+                <noscript data-class="avatar" data-alt="michaelficarra" data-src="https://secure.gravatar.com/avatar/7b784aa822c303fb832330c6137e20be?s=34&amp;r=pg&amp;d=https%3A%2F%2Fdeveloper.cdn.mozilla.net%2Fmedia%2F%2Fimg%2Favatar.png">michaelficarra</noscript></a>
+                </li>
+                    </ul>
+        </div>
+        
+          
+      </div>
+      
+      <!-- start the main content container -->
+        <div id="wiki-column-container" class="wiki-right-present wiki-left-closed wiki-left-none">
+
+          
+          <!-- content row with three strips -->
+          <div class="column-container column-container-reverse">
+
+                          <!-- TOC, approvals, etc -->
+              <div class="column-strip wiki-column" id="wiki-right">
+                            <!-- table of contents -->
+              <div id="toc" class="toc toggleable">
+                <a href="#toc" class="title toggler" data-open-icon="icon-plus" data-closed-icon="icon-minus">In This Article<i></i></a>
+                <ol class="toggle-container">
+                  <li><a href="#Built-in_objects" rel="internal">Built-in objects</a><li><a href="#Properties_of_the_Reflect_object" rel="internal">Properties of the <code>Reflect</code> object</a><ol><li><ol><li><a href="#Reflect.parse(src.5B.2C_options.5D)" rel="internal"><code>Reflect.parse(src[, options])</code></a></ol></li></ol></li><li><a href="#Node_objects" rel="internal">Node objects</a><ol><li><a href="#Programs" rel="internal">Programs</a><li><a href="#Functions" rel="internal">Functions</a><li><a href="#Statements" rel="internal">Statements</a><li><a href="#Declarations" rel="internal">Declarations</a><li><a href="#Expressions" rel="internal">Expressions</a><li><a href="#Patterns" rel="internal">Patterns</a><li><a href="#Clauses" rel="internal">Clauses</a><li><a href="#Miscellaneous" rel="internal">Miscellaneous</a><li><a href="#E4X" rel="internal">E4X</a><ol><li><a href="#Declarations_2" rel="internal">Declarations</a><li><a href="#Expressions_2" rel="internal">Expressions</a><li><a href="#XML" rel="internal">XML</a></ol></li></ol></li><li><a href="#Builder_objects" rel="internal">Builder objects</a><ol><li><a href="#Programs_2" rel="internal">Programs</a><li><a href="#Statements_2" rel="internal">Statements</a><li><a href="#Declarations_3" rel="internal">Declarations</a><li><a href="#Expressions_3" rel="internal">Expressions</a><li><a href="#Patterns_2" rel="internal">Patterns</a><li><a href="#Clauses_2" rel="internal">Clauses</a><li><a href="#Miscellaneous_2" rel="internal">Miscellaneous</a><li><a href="#E4X_2" rel="internal">E4X</a><ol><li><a href="#Declarations_4" rel="internal">Declarations</a><li><a href="#Expressions_4" rel="internal">Expressions</a><li><a href="#XML_2" rel="internal">XML</a></ol></li></ol></li>
+                </ol>
+              </div>
+                            </div>
+            
+                                                  
+            <!-- center: main article content -->
+            <div id="wiki-content" class="column-main wiki-column text-content">
+
+              
+              
+                                                <div class="warning warning-review"><p>This article is in need of a technical review.</p></div>
+                                                                            
+              <!-- just the article content -->
+              <article id="wikiArticle">
+                                                      <p></p><div class="overheadIndicator jsMinVer jsMinVerHeader"> 
+    <p>This article covers features introduced in <a href="https://developer.mozilla.org/en-US/docs/SpiderMonkey/1.8.5">SpiderMonkey 1.8.5</a></p> 
+</div><p></p>
+<p><span class="seoSummary">Recent builds of the <a href="/En/SpiderMonkey/Build_Documentation" title="https://developer.mozilla.org/en/SpiderMonkey/Build_Documentation">standalone SpiderMonkey shell</a> include a reflection of the SpiderMonkey parser, made available as a JavaScript API. </span>This makes it easier to write tools in JavaScript that manipulate JavaScript source programs, such as syntax highlighters, static analyses, translators, compilers, obfuscators, etc.</p>
+<div class="note">
+ <p><strong>NOTE:</strong> Several projects are using this specification. Please do not make changes to it without consulting with the authors of <a class="external" href="http://esprima.org/" title="http://esprima.org/">Esprima</a>, <a class="external" href="https://github.com/Constellation/escodegen" title="https://github.com/Constellation/escodegen">Escodegen</a>, and <a class="external" href="http://marijnhaverbeke.nl/acorn" title="http://marijnhaverbeke.nl/acorn">Acorn</a>.</p>
+</div>
+<p>Example:</p>
+<pre>&gt; var expr = Reflect.parse("obj.foo + 42").body[0].expression
+&gt; expr.left.property
+({loc:null, type:"Identifier", name:"foo"})
+&gt; expr.right
+({loc:{source:null, start:{line:1, column:10}, end:{line:1, column:12}}, type:"Literal", value:42})
+</pre>
+<p>It is also available since Firefox 7; it can be imported into the global object via:</p>
+<pre>Components.utils.import("resource://gre/modules/reflect.jsm") 
+</pre>
+<p>or into a specified object via:</p>
+<pre>Components.utils.import("resource://gre/modules/reflect.jsm", obj)
+</pre>
+<h2 id="Built-in_objects">Built-in objects</h2>
+<p>Whether in SpiderMonkey shell or Firefox (after importing), the global singleton object <code>Reflect</code> currently contains just the <code>parse</code> method.</p>
+<h2 id="Properties_of_the_Reflect_object">Properties of the <code>Reflect</code> object</h2>
+<p>The <code>Reflect</code> object currently consists of a single method.</p>
+<h4 id="Reflect.parse(src.5B.2C_options.5D)"><code>Reflect.parse(src[, options])</code></h4>
+<p>Coerces <strong><span style="font-family: Courier New;">src</span></strong> to a string and parses the result as a JavaScript program. By default, the parsing returns a Program object (see below) representing the parsed abstract syntax tree (AST).</p>
+<p>Additional options may be provided via the <strong><span style="font-family: Courier New;">options</span></strong> object, which can include any of the following properties:</p>
+<table style="width: 67%; border-color: rgb(237, 242, 247); border-style: solid; border-width: 1px;">
+ <tbody>
+  <tr style="background-color: rgb(241, 246, 251);">
+   <td style=""><strong><span style="font-family: Courier New;">loc</span></strong></td>
+   <td style="">Boolean</td>
+   <td style="">Default: <span style="font-family: Courier New;">true</span></td>
+  </tr>
+  <tr>
+   <td colspan="3">When <strong><span style="font-family: Courier New;">loc</span></strong> is <span style="font-family: Courier New;">true</span>, the parser includes source location information in the returned AST nodes.</td>
+  </tr>
+  <tr style="background-color: rgb(241, 246, 251);">
+   <td><strong><span style="font-family: Courier New;">source</span></strong></td>
+   <td>String</td>
+   <td>Default: <span style="font-family: Courier New;">null</span></td>
+  </tr>
+  <tr>
+   <td colspan="3">A description of the input source; typically a filename, path, or URL. This string is not meaningful to the parsing process, but is produced as part of the source location information in the returned AST nodes.</td>
+  </tr>
+  <tr style="background-color: rgb(241, 246, 251);">
+   <td><strong><span style="font-family: Courier New;">line</span></strong></td>
+   <td>Number</td>
+   <td>Default: <span style="font-family: Courier New;">1</span></td>
+  </tr>
+  <tr>
+   <td colspan="3">The initial line number to use for source location information.</td>
+  </tr>
+  <tr style="background-color: rgb(241, 246, 251);">
+   <td><strong><span style="font-family: Courier New;">builder</span></strong></td>
+   <td>Builder</td>
+   <td>Default: <span style="font-family: Courier New;">null</span></td>
+  </tr>
+  <tr>
+   <td colspan="3">
+    <p>A builder object, which can be used to produce AST nodes in custom data formats. The expected callback methods are described under <a href="/en/SpiderMonkey/Parser_API#Builder_objects" title="en/SpiderMonkey/Parser API#Builder objects">Builder Objects</a>.</p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+<p>If parsing fails due to a syntax error, an instance of <code>SyntaxError</code> is thrown. The syntax error object thrown by <code>Reflect.parse()</code> has the same <code>message</code> property as the syntax error that would be thrown by <code>eval(src)</code>. The <code>lineNumber</code> and <code>fileName</code> properties of the syntax error object indicate the source location of the syntax error.</p>
+<h2 id="Node_objects">Node objects</h2>
+<p>By default, <code>Reflect.parse()</code> produces Node objects, which are plain JavaScript objects (i.e., their prototype derives from the standard <code>Object</code> prototype). All node types implement the following interface:</p>
+<pre>interface Node {
+    type: string;
+    loc: SourceLocation | null;
+}
+</pre>
+<p>The <code>type</code> field is a string representing the AST variant type. Each subtype of Node is documented below with the specific string of its <code>type</code> field. You can use this field to determine which interface a node implements.</p>
+<p>The <code>loc</code> field represents the source location information of the node. If the parser produced no information about the node's source location, the field is <code>null</code>; otherwise it is an object consisting of a start position (the position of the first character of the parsed source region) and an end position (the position of the first character <em>after</em> the parsed source region):</p>
+<pre>interface SourceLocation {
+    source: string | null;
+    start: Position;
+    end: Position;
+} 
+</pre>
+<p>Each <code>Position</code> object consists of a <code>line</code> number (1-indexed) and a <code>column</code> number (0-indexed):</p>
+<pre>interface Position {
+    line: uint32 &gt;= 1;
+    column: uint32 &gt;= 0;
+}</pre>
+<h3 id="Programs">Programs</h3>
+<pre>interface Program &lt;: Node {
+    type: "Program";
+    body: [ Statement ];
+}
+</pre>
+<p>A complete program source tree.</p>
+<h3 id="Functions">Functions</h3>
+<pre>interface Function &lt;: Node {
+    id: Identifier | null;
+    params: [ Pattern ];
+    defaults: [ Expression ];
+    rest: Identifier | null;
+    body: BlockStatement | Expression;
+    generator: boolean;
+    expression: boolean;
+}
+</pre>
+<p>A function declaration or expression. The <code>body</code> of the function may be a block statement, or in the case of an <a href="/en/JavaScript/New_in_JavaScript/1.8#Expression_closures_%28Merge_into_own_page.2fsection%29" title="https://developer.mozilla.org/en/new_in_javascript_1.8#Expression_closures_(Merge_into_own_page.2fsection)">expression closure</a>, an expression.</p>
+<div class="note">
+ <strong>Note:</strong> Expression closures are SpiderMonkey-specific.</div>
+<p>If the <code>generator</code> flag is <code>true</code>, the function is a <a href="/en/JavaScript/Guide/Iterators_and_Generators" title="https://developer.mozilla.org/en/Core_JavaScript_1.5_Guide/Iterators_and_Generators">generator function</a>, i.e., contains a <code>yield</code> expression in its body (other than in a nested function).</p>
+<div class="note">
+ <strong>Note:</strong> Generators are SpiderMonkey-specific.</div>
+<p>If the <code>expression</code> flag is <code>true</code>, the function is an expression closure and the <code>body</code> field is an expression.</p>
+<h3 id="Statements">Statements</h3>
+<pre>interface Statement &lt;: Node { }
+</pre>
+<p>Any statement.</p>
+<pre>interface EmptyStatement &lt;: Statement {
+    type: "EmptyStatement";
+}
+</pre>
+<p>An empty statement, i.e., a solitary semicolon.</p>
+<pre>interface BlockStatement &lt;: Statement {
+    type: "BlockStatement";
+    body: [ Statement ];
+}
+</pre>
+<p>A block statement, i.e., a sequence of statements surrounded by braces.</p>
+<pre>interface ExpressionStatement &lt;: Statement {
+    type: "ExpressionStatement";
+    expression: Expression;
+}
+</pre>
+<p>An expression statement, i.e., a statement consisting of a single expression.</p>
+<pre>interface IfStatement &lt;: Statement {
+    type: "IfStatement";
+    test: Expression;
+    consequent: Statement;
+    alternate: Statement | null;
+}
+</pre>
+<p>An <code>if</code> statement.</p>
+<pre>interface LabeledStatement &lt;: Statement {
+    type: "LabeledStatement";
+    label: Identifier;
+    body: Statement;
+}
+</pre>
+<p>A labeled statement, i.e., a statement prefixed by a <code>break</code>/<code>continue</code> label.</p>
+<pre>interface BreakStatement &lt;: Statement {
+    type: "BreakStatement";
+    label: Identifier | null;
+}
+</pre>
+<p>A <code>break</code> statement.</p>
+<pre>interface ContinueStatement &lt;: Statement {
+    type: "ContinueStatement";
+    label: Identifier | null;
+}
+</pre>
+<p>A <code>continue</code> statement.</p>
+<pre>interface WithStatement &lt;: Statement {
+    type: "WithStatement";
+    object: Expression;
+    body: Statement;
+}
+</pre>
+<p>A <code>with</code> statement.</p>
+<pre>interface SwitchStatement &lt;: Statement {
+    type: "SwitchStatement";
+    discriminant: Expression;
+    cases: [ SwitchCase ];
+    lexical: boolean;
+}
+</pre>
+<p>A <code>switch</code> statement. The lexical flag is metadata indicating whether the <code>switch</code> statement contains any unnested <code>let</code> declarations (and therefore introduces a new lexical scope).</p>
+<pre>interface ReturnStatement &lt;: Statement {
+    type: "ReturnStatement";
+    argument: Expression | null;
+}
+</pre>
+<p>A <code>return</code> statement.</p>
+<pre>interface ThrowStatement &lt;: Statement {
+    type: "ThrowStatement";
+    argument: Expression;
+}
+</pre>
+<p>A <code>throw</code> statement.</p>
+<pre>interface TryStatement &lt;: Statement {
+    type: "TryStatement";
+    block: BlockStatement;
+    handler: CatchClause | null;
+    guardedHandlers: [ CatchClause ];
+    finalizer: BlockStatement | null;
+}
+</pre>
+<p>A <code>try</code> statement.</p>
+<div class="note">
+ <strong>Note:</strong> Multiple <code>catch</code> clauses are SpiderMonkey-specific.</div>
+<pre>interface WhileStatement &lt;: Statement {
+    type: "WhileStatement";
+    test: Expression;
+    body: Statement;
+}
+</pre>
+<p>A <code>while</code> statement.</p>
+<pre>interface DoWhileStatement &lt;: Statement {
+    type: "DoWhileStatement";
+    body: Statement;
+    test: Expression;
+}
+</pre>
+<p>A <code>do</code>/<code>while</code> statement.</p>
+<pre>interface ForStatement &lt;: Statement {
+    type: "ForStatement";
+    init: VariableDeclaration | Expression | null;
+    test: Expression | null;
+    update: Expression | null;
+    body: Statement;
+}
+</pre>
+<p>A <code>for</code> statement.</p>
+<pre>interface ForInStatement &lt;: Statement {
+    type: "ForInStatement";
+    left: VariableDeclaration |  Expression;
+    right: Expression;
+    body: Statement;
+    each: boolean;
+}
+</pre>
+<p>A <code>for</code>/<code>in</code> statement, or, if <code>each</code> is <code>true</code>, a <code>for each</code>/<code>in</code> statement.</p>
+<div class="note">
+ <strong>Note:</strong> The <code>for each</code> form is SpiderMonkey-specific.</div>
+<pre>interface ForOfStatement &lt;: Statement {
+    type: "ForOfStatement";
+    left: VariableDeclaration |  Expression;
+    right: Expression;
+    body: Statement;
+}</pre>
+<p>A <code>for</code>/<code>of</code> statement.</p>
+<pre>interface LetStatement &lt;: Statement {
+    type: "LetStatement";
+    head: [ { id: Pattern, init: Expression | null } ];
+    body: Statement;
+}
+</pre>
+<p>A <code>let</code> statement.</p>
+<div class="note">
+ <strong>Note:</strong> The <code>let</code> statement form is SpiderMonkey-specific.</div>
+<pre>interface DebuggerStatement &lt;: Statement {
+    type: "DebuggerStatement";
+}
+</pre>
+<p>A <code>debugger</code> statement.</p>
+<div class="note">
+ <strong>Note:</strong> The <code>debugger</code> statement is new in ECMAScript 5th edition, although SpiderMonkey has supported it for years.</div>
+<h3 id="Declarations">Declarations</h3>
+<pre>interface Declaration &lt;: Statement { }
+</pre>
+<p>Any declaration node. Note that declarations are considered statements; this is because declarations can appear in any statement context in the language recognized by the SpiderMonkey parser.</p>
+<div class="note">
+ <strong>Note:</strong> Declarations in arbitrary nested scopes are SpiderMonkey-specific.</div>
+<pre>interface FunctionDeclaration &lt;: Function, Declaration {
+    type: "FunctionDeclaration";
+    id: Identifier;
+    params: [ Pattern ];
+    defaults: [ Expression ];
+    rest: Identifier | null;
+    body: BlockStatement | Expression;
+    generator: boolean;
+    expression: boolean;
+}
+</pre>
+<p>A function declaration.</p>
+<div class="note">
+ <strong>Note:</strong> The <code>id</code> field cannot be <code>null</code>.</div>
+<pre>interface VariableDeclaration &lt;: Declaration {
+    type: "VariableDeclaration";
+    declarations: [ VariableDeclarator ];
+    kind: "var" | "let" | "const";
+}
+</pre>
+<p>A variable declaration, via one of <code>var</code>, <code>let</code>, or <code>const</code>.</p>
+<pre>interface VariableDeclarator &lt;: Node {
+    type: "VariableDeclarator";
+    id: Pattern;
+    init: Expression | null;
+}
+</pre>
+<p>A variable declarator.</p>
+<div class="note">
+ <strong>Note:</strong> The <code>id</code> field cannot be <code>null</code>.</div>
+<div class="note">
+ <strong>Note:</strong> <code>let</code> and <code>const</code> are SpiderMonkey-specific.</div>
+<h3 id="Expressions">Expressions</h3>
+<pre>interface Expression &lt;: Node, Pattern { }</pre>
+<p>Any expression node. Since the left-hand side of an assignment may be any expression in general, an expression can also be a pattern.</p>
+<pre>interface ThisExpression &lt;: Expression {
+    type: "ThisExpression";
+}
+</pre>
+<p>A <code>this</code> expression.</p>
+<pre>interface ArrayExpression &lt;: Expression {
+    type: "ArrayExpression";
+    elements: [ Expression | null ];
+}</pre>
+<p>An array expression.</p>
+<pre>interface ObjectExpression &lt;: Expression {
+    type: "ObjectExpression";
+    properties: [ { key: Literal | Identifier,
+                    value: Expression,
+                    kind: "init" | "get" | "set" } ];
+}</pre>
+<p>An object expression. A literal property in an object expression can have either a string or number as its <code>value</code>. Ordinary property initializers have a <code>kind</code> value <code>"init"</code>; getters and setters have the <code>kind</code> values <code>"get"</code> and <code>"set"</code>, respectively.</p>
+<pre>interface FunctionExpression &lt;: Function, Expression {
+    type: "FunctionExpression";
+    id: Identifier | null;
+    params: [ Pattern ];
+    defaults: [ Expression ];
+    rest: Identifier | null;
+    body: BlockStatement | Expression;
+    generator: boolean;
+    expression: boolean;
+}
+</pre>
+<p>A function expression.</p>
+<pre>interface ArrowExpression &lt;: Function, Expression {
+    type: "ArrowExpression";
+    params: [ Pattern ];
+    defaults: [ Expression ];
+    rest: Identifier | null;
+    body: BlockStatement | Expression;
+    generator: boolean;
+    expression: boolean;
+}
+</pre>
+<p>A fat arrow function expression, i.e., `let foo = (bar) =&gt; { /* body */ }`.</p>
+<pre>interface SequenceExpression &lt;: Expression {
+    type: "SequenceExpression";
+    expressions: [ Expression ];
+}</pre>
+<p>A sequence expression, i.e., a comma-separated sequence of expressions.</p>
+<pre>interface UnaryExpression &lt;: Expression {
+    type: "UnaryExpression";
+    operator: UnaryOperator;
+    prefix: boolean;
+    argument: Expression;
+}</pre>
+<p>A unary operator expression.</p>
+<pre>interface BinaryExpression &lt;: Expression {
+    type: "BinaryExpression";
+    operator: BinaryOperator;
+    left: Expression;
+    right: Expression;
+}</pre>
+<p>A binary operator expression.</p>
+<pre>interface AssignmentExpression &lt;: Expression {
+    type: "AssignmentExpression";
+    operator: AssignmentOperator;
+    left: Expression;
+    right: Expression;
+}</pre>
+<p>An assignment operator expression.</p>
+<pre>interface UpdateExpression &lt;: Expression {
+    type: "UpdateExpression";
+    operator: UpdateOperator;
+    argument: Expression;
+    prefix: boolean;
+}</pre>
+<p>An update (increment or decrement) operator expression.</p>
+<pre>interface LogicalExpression &lt;: Expression {
+    type: "LogicalExpression";
+    operator: LogicalOperator;
+    left: Expression;
+    right: Expression;
+}</pre>
+<p>A logical operator expression.</p>
+<pre>interface ConditionalExpression &lt;: Expression {
+    type: "ConditionalExpression";
+    test: Expression;
+    alternate: Expression;
+    consequent: Expression;
+}</pre>
+<p>A conditional expression, i.e., a ternary <code>?</code>/<code>:</code> expression.</p>
+<pre>interface NewExpression &lt;: Expression {
+    type: "NewExpression";
+    callee: Expression;
+    arguments: [ Expression ];
+}</pre>
+<p>A <code>new</code> expression.</p>
+<pre>interface CallExpression &lt;: Expression {
+    type: "CallExpression";
+    callee: Expression;
+    arguments: [ Expression ];
+}</pre>
+<p>A function or method call expression.</p>
+<pre>interface MemberExpression &lt;: Expression {
+    type: "MemberExpression";
+    object: Expression;
+    property: Identifier | Expression;
+    computed: boolean;
+}</pre>
+<p>A member expression. If <code>computed === true</code>, the node corresponds to a computed <code>e1[e2]</code> expression and property is an <code>Expression</code>. If <code>computed === false</code>, the node corresponds to a static <code>e1.x</code> expression and property is an <code>Identifier</code>.</p>
+<pre>interface YieldExpression &lt;: Expression {
+    argument: Expression | null;
+}
+</pre>
+<p>A <code>yield</code> expression.</p>
+<div class="note">
+ <strong>Note:</strong> <code>yield</code> expressions are SpiderMonkey-specific.</div>
+<pre>interface ComprehensionExpression &lt;: Expression {
+    body: Expression;
+    blocks: [ ComprehensionBlock ];
+    filter: Expression | null;
+}
+</pre>
+<p>An <a href="/en/JavaScript/Guide/Obsolete_Pages/Working_with_Arrays#Array_comprehensions" title="https://developer.mozilla.org/en/Core_JavaScript_1.5_Guide/Working_with_Arrays#Array_comprehensions">array comprehension</a>. The <code>blocks</code> array corresponds to the sequence of <code>for</code> and <code>for each</code> blocks. The optional <code>filter</code> expression corresponds to the final <code>if</code> clause, if present.</p>
+<div class="note">
+ <strong>Note:</strong> Array comprehensions are SpiderMonkey-specific.</div>
+<pre>interface GeneratorExpression &lt;: Expression {
+    body: Expression;
+    blocks: [ ComprehensionBlock ];
+    filter: Expression | null;
+}
+</pre>
+<p>A <a href="/en/JavaScript/Guide/Iterators_and_Generators#Generator_expressions" title="https://developer.mozilla.org/en/Core_JavaScript_1.5_Guide/Iterators_and_Generators#Generator_expressions">generator expression</a>. As with array comprehensions, the <code>blocks</code> array corresponds to the sequence of <code>for</code> and <code>for each</code> blocks, and the optional <code>filter</code> expression corresponds to the final <code>if</code> clause, if present.</p>
+<div class="note">
+ <strong>Note:</strong> Generator expressions are SpiderMonkey-specific.</div>
+<pre>interface GraphExpression &lt;: Expression {
+    index: uint32;
+    expression: Literal;
+}
+</pre>
+<p>A <a href="/en/JavaScript/Sharp_variables_in_JavaScript" title="https://developer.mozilla.org/en/Sharp_variables_in_JavaScript">graph expression</a>, aka "sharp literal," such as <code>#1={ self: #1# }</code>.</p>
+<div class="note">
+ <strong>Note:</strong> Graph expressions are SpiderMonkey-specific.</div>
+<pre>interface GraphIndexExpression &lt;: Expression {
+    index: uint32;
+}
+</pre>
+<p>A <a href="/en/JavaScript/Sharp_variables_in_JavaScript" title="https://developer.mozilla.org/en/Sharp_variables_in_JavaScript">graph index expression</a>, aka "sharp variable," such as <code>#1#</code>.</p>
+<div class="note">
+ <strong>Note:</strong> Graph index expressions are SpiderMonkey-specific.</div>
+<pre>interface LetExpression &lt;: Expression {
+    type: "LetExpression";
+    head: [ { id: Pattern, init: Expression | null } ];
+    body: Expression;
+}
+</pre>
+<p>A <code>let</code> expression.</p>
+<div class="note">
+ <strong>Note:</strong> The <code>let</code> expression form is SpiderMonkey-specific.</div>
+<h3 id="Patterns">Patterns</h3>
+<pre>interface Pattern &lt;: Node { }
+</pre>
+<p>JavaScript 1.7 introduced <a href="/en/JavaScript/New_in_JavaScript/1.7#Destructuring_assignment_%28Merge_into_own_page.2fsection%29" title="https://developer.mozilla.org/en/new_in_javascript_1.7#Destructuring_assignment_(Merge_into_own_page.2fsection)">destructuring assignment and binding</a> forms. All binding forms (such as function parameters, variable declarations, and <code>catch</code> block headers) accept array and object destructuring patterns in addition to plain identifiers. The left-hand sides of assignment expressions can be arbitrary expressions, but in the case where the expression is an object or array literal, it is interpreted by SpiderMonkey as a destructuring pattern.</p>
+<p>Since the left-hand side of an assignment can in general be any expression, in an assignment context, a pattern can be any expression. In binding positions (such as function parameters, variable declarations, and <code>catch</code> headers), patterns can only be identifiers in the base case, not arbitrary expressions.</p>
+<pre>interface ObjectPattern &lt;: Pattern {
+    type: "ObjectPattern";
+    properties: [ { key: Literal | Identifier, value: Pattern } ];
+}
+</pre>
+<p>An object-destructuring pattern. A literal property in an object pattern can have either a string or number as its <code>value</code>.</p>
+<pre>interface ArrayPattern &lt;: Pattern {
+    type: "ArrayPattern";
+    elements: [ Pattern | null ];
+}
+</pre>
+<p>An array-destructuring pattern.</p>
+<h3 id="Clauses">Clauses</h3>
+<pre>interface SwitchCase &lt;: Node {
+    type: "SwitchCase";
+    test: Expression | null;
+    consequent: [ Statement ];
+}
+</pre>
+<p>A <code>case</code> (if <code>test</code> is an <code>Expression</code>) or <code>default</code> (if <code>test === null</code>) clause in the body of a <code>switch</code> statement.</p>
+<pre>interface CatchClause &lt;: Node {
+    type: "CatchClause";
+    param: Pattern;
+    guard: Expression | null;
+    body: BlockStatement;
+}
+</pre>
+<p>A <code>catch</code> clause following a <code>try</code> block. The optional <code>guard</code> property corresponds to the optional expression guard on the bound variable.</p>
+<div class="note">
+ <strong>Note:</strong> The guard expression is SpiderMonkey-specific.</div>
+<pre>interface ComprehensionBlock &lt;: Node {
+    left: Pattern;
+    right: Expression;
+    each: boolean;
+}
+</pre>
+<p>A <code>for</code> or <code>for each</code> block in an array comprehension or generator expression.</p>
+<div class="note">
+ <strong>Note:</strong> Array comprehensions and generator expressions are SpiderMonkey-specific.</div>
+<h3 id="Miscellaneous">Miscellaneous</h3>
+<pre>interface Identifier &lt;: Node, Expression, Pattern {
+    type: "Identifier";
+    name: string;
+}
+</pre>
+<p>An identifier. Note that an identifier may be an expression or a destructuring pattern.</p>
+<pre>interface Literal &lt;: Node, Expression {
+    type: "Literal";
+    value: string | boolean | null | number | RegExp;
+}
+</pre>
+<p>A literal token. Note that a literal can be an expression.</p>
+<pre>enum UnaryOperator {
+    "-" | "+" | "!" | "~" | "typeof" | "void" | "delete"
+}
+</pre>
+<p>A unary operator token.</p>
+<pre>enum BinaryOperator {
+    "==" | "!=" | "===" | "!=="
+         | "&lt;" | "&lt;=" | "&gt;" | "&gt;="
+         | "&lt;&lt;" | "&gt;&gt;" | "&gt;&gt;&gt;"
+         | "+" | "-" | "*" | "/" | "%"
+         | "|" | "^" | "&amp;" | "in"
+         | "instanceof" | ".."
+}
+</pre>
+<p>A binary operator token.</p>
+<div class="note">
+ <strong>Note:</strong> The <code>..</code> operator is E4X-specific.</div>
+<pre>enum LogicalOperator {
+    "||" | "&amp;&amp;"
+}
+</pre>
+<p>A logical operator token.</p>
+<pre>enum AssignmentOperator {
+    "=" | "+=" | "-=" | "*=" | "/=" | "%="
+        | "&lt;&lt;=" | "&gt;&gt;=" | "&gt;&gt;&gt;="
+        | "|=" | "^=" | "&amp;="
+}
+</pre>
+<p>An assignment operator token.</p>
+<pre>enum UpdateOperator {
+    "++" | "--"
+}
+</pre>
+<p>An update (increment or decrement) operator token.</p>
+<h3 id="E4X">E4X</h3>
+<p>This section describes node types that are provided for E4X support. E4X has since been removed as of Gecko 21.</p>
+<p></p><div class="overheadIndicator obsolete obsoleteHeader"><p><strong>Obsolete</strong><br>This feature is obsolete. Although it may still work in some browsers, its use is discouraged since it could be removed at any time. Try to avoid using it.</p></div><p></p>
+<div class="note">
+ <strong>Note:</strong> E4X is not part of the ECMAScript standard (<a class="external" href="http://www.ecma-international.org/publications/standards/Ecma-262.htm" title="http://www.ecma-international.org/publications/standards/Ecma-262.htm">ECMA-262</a>), but is a separate standard of its own (<a class="external" href="http://www.ecma-international.org/publications/standards/Ecma-357.htm" title="http://www.ecma-international.org/publications/standards/Ecma-357.htm">ECMA-357</a>).</div>
+<h4 id="Declarations_2">Declarations</h4>
+<pre>interface XMLDefaultDeclaration &lt;: Declaration {
+    type: "XMLDefaultDeclaration";
+    namespace: Expression;
+}
+</pre>
+<p>A <code>default xml namespace</code> declaration.</p>
+<h4 id="Expressions_2">Expressions</h4>
+<pre>interface XMLAnyName &lt;: Expression {
+    type: "XMLAnyName";
+}
+</pre>
+<p>The special E4X wildcard pseudo-identifier <code>*</code>.</p>
+<pre>interface XMLQualifiedIdentifier &lt;: Expression {
+    type: "XMLQualifiedIdentifier";
+    left: Identifier | XMLAnyName;
+    right: Identifier | Expression;
+    computed: boolean;
+}
+</pre>
+<p>An E4X qualified identifier, i.e., a pseudo-identifier using the namespace separator <code>::</code>. If the qualified identifier has a computed name (i.e., the <code>id::[expr]</code> form), then <code>computed</code> is <code>true</code> and the <code>right</code> property is an expression.</p>
+<pre>interface XMLFunctionQualifiedIdentifier &lt;: Expression {
+    type: "XMLFunctionQualifiedIdentifier";
+    right: Identifier | Expression;
+    computed: boolean;
+}
+</pre>
+<p>An E4X identifier qualified by the <code>function</code> keyword, e.g., <code>function::id</code>.</p>
+<div class="note">
+ <strong>Note:</strong> <code>function</code>-qualified identifiers are SpiderMonkey-specific.</div>
+<pre>interface XMLAttributeSelector &lt;: Expression {
+    type: "XMLAttributeSelector";
+    attribute: Expression;
+}
+</pre>
+<p>An E4X attribute selector expression, i.e., an <code>@</code> expression.</p>
+<pre>interface XMLFilterExpression &lt;: Expression {
+    type: "XMLFilterExpression";
+    left: Expression;
+    right: Expression;
+}
+</pre>
+<p>An E4X list filter expression, i.e., an expression of the form <code>expr.(expr)</code>.</p>
+<pre>interface XMLElement &lt;: XML, Expression {
+    type: "XMLElement";
+    contents: [ XML ];
+}
+</pre>
+<p>An E4X literal representing a single XML element.</p>
+<pre>interface XMLList &lt;: XML, Expression {
+    type: "XMLList";
+    contents: [ XML ];
+}
+</pre>
+<p>An E4X literal representing a list of XML elements.</p>
+<h4 id="XML">XML</h4>
+<pre>interface XML &lt;: Node { }
+</pre>
+<p>XML data.</p>
+<pre>interface XMLEscape &lt;: XML {
+    type "XMLEscape";
+    expression: Expression;
+}
+</pre>
+<p>XML data with an escaped JavaScript expression.</p>
+<pre>interface XMLText &lt;: XML {
+    type: "XMLText";
+    text: string;
+}
+</pre>
+<p>Literal XML text.</p>
+<pre>interface XMLStartTag &lt;: XML {
+    type: "XMLStartTag";
+    contents: [ XML ];
+}
+</pre>
+<p>An XML start tag.</p>
+<pre>interface XMLEndTag &lt;: XML {
+    type: "XMLEndTag";
+    contents: [ XML ];
+}
+</pre>
+<p>An XML end tag.</p>
+<pre>interface XMLPointTag &lt;: XML {
+    type: "XMLPointTag";
+    contents: [ XML ];
+}
+</pre>
+<p>An XML point tag.</p>
+<pre>interface XMLName &lt;: XML {
+    type: "XMLName";
+    contents: string | [ XML ];
+}
+</pre>
+<p>An XML name.</p>
+<pre>interface XMLAttribute &lt;: XML {
+    type: "XMLAttribute";
+    value: string;
+}
+</pre>
+<p>An XML attribute value.</p>
+<pre>interface XMLCdata &lt;: XML {
+    type: "XMLCdata";
+    contents: string;
+}
+</pre>
+<p>An XML CDATA node.</p>
+<pre>interface XMLComment &lt;: XML {
+    type: "XMLComment";
+    contents: string;
+}
+</pre>
+<p>An XML comment.</p>
+<pre>interface XMLProcessingInstruction &lt;: XML {
+    type: "XMLProcessingInstruction";
+    target: string;
+    contents: string | null;
+}
+</pre>
+<p>An XML processing instruction.</p>
+<h2 id="Builder_objects">Builder objects</h2>
+<p>The optional <strong><code>builder</code></strong> parameter to <code>Reflect.parse()</code> makes it possible to construct user-specified data from the parser, rather than the default <code>Node</code> objects. Builder objects may contain any of the callback methods described in this section.</p>
+<p>Each callback can produce any custom, user-defined datatype; these are referred to below as <code>CustomExpression</code>, <code>CustomStatement</code>, etc.</p>
+<div class="note">
+ <strong>Note:</strong> Because this library uses <code>null</code> for optional nodes, it is recommended that user-defined datatypes <strong>not</strong> use <code>null</code> as a representation of an AST node.</div>
+<p>If the <strong><code>loc</code></strong> option is enabled (see the <a href="/en/SpiderMonkey/Parser_API#Reflect.parse(src.5b.2c_options.5d)" title="en/SpiderMonkey/Parser API#Reflect.parse(src.5b.2c options.5d)">Reflect.parse() options</a> above), then each callback is provided with the source location information of the parsed node as an extra parameter.</p>
+<p>All builder callbacks are optional. When a callback is missing, the default format is used, but the provided builder methods are still used recursively for sub-nodes.</p>
+<h3 id="Programs_2">Programs</h3>
+<h5 id="program(body.5B.2C_loc.5D)"><code>program(body[, loc])</code></h5>
+<pre>body: [ CustomStatement ]
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomProgram</p>
+<p>Callback to produce a custom program node.</p>
+<h3 id="Statements_2">Statements</h3>
+<h5 id="emptyStatement(.5Bloc.5D)"><code>emptyStatement([loc])</code></h5>
+<pre>loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomStatement</p>
+<p>Callback to produce a custom empty statement node.</p>
+<h5 id="blockStatement(body.5B.2C_loc.5D)"><code>blockStatement(body[, loc])</code></h5>
+<pre>body: CustomStatement
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomStatement</p>
+<p>Callback to produce a custom block statement node.</p>
+<h5 id="expressionStatement(expr.5B.2C_loc.5D)"><code>expressionStatement(expr[, loc])</code></h5>
+<pre>expr: CustomExpression
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomStatement</p>
+<p>Callback to produce a custom expression statement node.</p>
+<h5 id="labeledStatement(label.2C_body.5B.2C_loc.5D)"><code>labeledStatement(label, body[, loc])</code></h5>
+<pre>label: CustomIdentifier
+body: CustomStatement
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomStatement</p>
+<p>Callback to produce a custom labeled statement node.</p>
+<h5 id="ifStatement(test.2C_cons.2C_alt.5B.2C_loc.5D)"><code>ifStatement(test, cons, alt[, loc])</code></h5>
+<pre>test: CustomExpression
+cons: CustomStatement
+alt: CustomStatement | null
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomStatement</p>
+<p>Callback to produce a custom <code>if</code> statement node.</p>
+<h5 id="switchStatement(disc.2C_cases.2C_isLexical.5B.2C_loc.5D)"><code>switchStatement(disc, cases, isLexical[, loc])</code></h5>
+<pre>disc: CustomExpression
+cases: [ CustomSwitchCase ]
+isLexical: boolean
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomStatement</p>
+<p>Callback to produce a custom <code>switch</code> statement node. The <strong><code>isLexical</code></strong> flag is metadata indicating whether the <code>switch</code> statement contains any unnested <code>let</code> declarations (and therefore introduces a new lexical scope).</p>
+<h5 id="whileStatement(test.2C_body.5B.2C_loc.5D)"><code>whileStatement(test, body[, loc])</code></h5>
+<pre>test: CustomExpression
+body: CustomStatement
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomStatement</p>
+<p>Callback to produce a custom <code>while</code> statement node.</p>
+<h5 id="doWhileStatement(body.2C_test.5B.2C_loc.5D)"><code>doWhileStatement(body, test[, loc])</code></h5>
+<pre>body: CustomStatement
+test: CustomExpression
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomStatement</p>
+<p>Callback to produce a custom <code>do</code>-<code>while</code> statement node.</p>
+<h5 id="forStatement(init.2C_test.2C_update.2C_body.5B.2C_loc.5D)"><code>forStatement(init, test, update, body[, loc])</code></h5>
+<pre>init: CustomVariableDeclaration | CustomExpression | null
+test: CustomExpression | null
+update: CustomExpression | null
+body: CustomStatement
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomStatement</p>
+<p>Callback to produce a custom <code>for</code> statement node.</p>
+<h5 id="forInStatement(left.2C_right.2C_body.2C_isForEach.5B.2C_loc.5D)"><code>forInStatement(left, right, body, isForEach[, loc])</code></h5>
+<pre>left: CustomVariableDeclaration | CustomExpression
+right: CustomExpression
+body: CustomStatement
+isForEach: boolean
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomStatement</p>
+<p>Callback to produce a custom <code>for</code>-<code>in</code> statement node. The <strong><code>isForEach</code></strong> flag indicates whether the node is a <code>for each</code> statement.</p>
+<h5 id="breakStatement(label.5B.2C_loc.5D)"><code>breakStatement(label[, loc])</code></h5>
+<pre>label: CustomIdentifier | null
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomStatement</p>
+<p>Callback to produce a custom <code>break</code> statement node.</p>
+<h5 id="continueStatement(label.5B.2C_loc.5D)"><code>continueStatement(label[, loc])</code></h5>
+<pre>label: CustomIdentifier | null
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomStatement</p>
+<p>Callback to produce a custom <code>continue</code> statement node.</p>
+<h5 id="withStatement(obj.2C_body.5B.2C_loc.5D)"><code>withStatement(obj, body[, loc])</code></h5>
+<pre>obj: CustomExpression
+body: CustomStatement
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomStatement</p>
+<p>Callback to produce a custom <code>with</code> statement node.</p>
+<h5 id="returnStatement(arg.5B.2C_loc.5D)"><code>returnStatement(arg[, loc])</code></h5>
+<pre>arg: CustomExpression | null
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomStatement</p>
+<p>Callback to produce a custom <code>return</code> statement node.</p>
+<h5 id="tryStatement(body.2C_handlers.2C_fin.5B.2C_loc.5D)"><code>tryStatement(body, handlers, fin[, loc])</code></h5>
+<pre>body: CustomStatement
+handlers: [ CustomCatchClause ]
+fin: CustomStatement | null
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomStatement</p>
+<p>Callback to produce a custom <code>try</code> statement node.</p>
+<h5 id="throwStatement(arg.5B.2C_loc.5D)"><code>throwStatement(arg[, loc])</code></h5>
+<pre>arg: CustomExpression
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomStatement</p>
+<p>Callback to produce a custom <code>throw</code> statement node.</p>
+<h5 id="debuggerStatement(.5Bloc.5D)"><code>debuggerStatement([loc])</code></h5>
+<pre>loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomStatement</p>
+<p>Callback to produce a custom <code>debugger</code> statement node.</p>
+<h5 id="letStatement(head.2C_body.5B.2C_loc.5D)"><code>letStatement(head, body[, loc])</code></h5>
+<pre>head: [ CustomDeclarator ]
+body: CustomStatement
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomStatement</p>
+<p>Callback to produce a custom <code>let</code> statement node.</p>
+<h3 id="Declarations_3">Declarations</h3>
+<h5 id="functionDeclaration(name.2C_args.2C_body.2C_isGenerator.2C_isExpression.5B.2C_loc.5D)"><code>functionDeclaration(name, args, body, isGenerator, isExpression[, loc])</code></h5>
+<pre>name: string
+args: [ CustomPattern ]
+body: CustomStatement | CustomExpression
+isGenerator: boolean
+isExpression: boolean
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomDeclaration</p>
+<p>Callback to produce a custom function declaration node.</p>
+<h5 id="variableDeclaration(kind.2C_dtors.5B.2C_loc.5D)"><code>variableDeclaration(kind, dtors[, loc])</code></h5>
+<pre>kind: "const" | "let" | "var"
+dtors: [ CustomDeclarator ]
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomDeclaration</p>
+<p>Callback to produce a custom variable declaration node.</p>
+<h5 id="variableDeclarator(patt.2C_init.5B.2C_loc.5D)"><code>variableDeclarator(patt, init[, loc])</code></h5>
+<pre>patt: CustomPattern
+init: CustomExpression | null
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomDeclarator</p>
+<p>Callback to produce a custom variable declarator node.</p>
+<h3 id="Expressions_3">Expressions</h3>
+<h5 id="sequenceExpression(exprs.5B.2C_loc.5D)"><code>sequenceExpression(exprs[, loc])</code></h5>
+<pre>exprs: [ CustomExpression ]
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomExpression</p>
+<p>Callback to produce a custom sequence expression node.</p>
+<h5 id="conditionalExpression(test.2C_cons.2C_alt.5B.2C_loc.5D)"><code>conditionalExpression(test, cons, alt[, loc])</code></h5>
+<pre>test: CustomExpression
+cons: CustomExpression
+alt: CustomExpression
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomExpression</p>
+<p>Callback to produce a custom conditional expression node.</p>
+<h5 id="unaryExpression(op.2C_arg.2C_isPrefix.5B.2C_loc.5D)"><code>unaryExpression(op, arg, isPrefix[, loc])</code></h5>
+<pre>op: UnaryOperator
+arg: CustomExpression
+isPrefix: boolean
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomExpression</p>
+<p>Callback to produce a custom unary expression node.</p>
+<h5 id="binaryExpression(op.2C_left.2C_right.5B.2C_loc.5D)"><code>binaryExpression(op, left, right[, loc])</code></h5>
+<pre>op: BinaryOperator
+left: CustomExpression
+right: CustomExpression
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomExpression</p>
+<p>Callback to produce a custom binary expression node.</p>
+<h5 id="assignmentExpression(op.2C_left.2C_right.5B.2C_loc.5D)"><code>assignmentExpression(op, left, right[, loc])</code></h5>
+<pre>op: AssignmentOperator
+left: CustomExpression
+right: CustomExpression
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomExpression</p>
+<p>Callback to produce a custom assignment expression node.</p>
+<h5 id="logicalExpression(op.2C_left.2C_right.5B.2C_loc.5D)"><code>logicalExpression(op, left, right[, loc])</code></h5>
+<pre>op: LogicalOperator
+left: CustomExpression
+right: CustomExpression
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomExpression</p>
+<p>Callback to produce a custom logical expression node.</p>
+<h5 id="updateExpression(op.2C_arg.2C_isPrefix.5B.2C_loc.5D)"><code>updateExpression(op, arg, isPrefix[, loc])</code></h5>
+<pre>op: UpdateOperator
+arg: CustomExpression
+isPrefix: boolean
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomExpression</p>
+<p>Callback to produce a custom update expression node.</p>
+<h5 id="newExpression(callee.2C_args.5B.2C_loc.5D)"><code>newExpression(callee, args[, loc])</code></h5>
+<pre>callee: CustomExpression
+args: [ CustomExpression ]
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomExpression</p>
+<p>Callback to produce a custom <code>new</code>-expression node.</p>
+<h5 id="callExpression(callee.2C_args.5B.2C_loc.5D)"><code>callExpression(callee, args[, loc])</code></h5>
+<pre>callee: CustomExpression
+args: [ CustomExpression ]
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomExpression</p>
+<p>Callback to produce a custom function call node.</p>
+<h5 id="memberExpression(obj.2C_prop.2C_isComputed.5B.2C_loc.5D)"><code>memberExpression(obj, prop, isComputed[, loc])</code></h5>
+<pre>obj: CustomExpression
+prop: CustomIdentifier | CustomExpression
+isComputed: boolean
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomExpression</p>
+<p>Callback to produce a custom member expression node.</p>
+<h5 id="functionExpression(name.2C_args.2C_body.2C_isGenerator.2C_isExpression.5B.2C_loc.5D)"><code>functionExpression(name, args, body, isGenerator, isExpression[, loc])</code></h5>
+<pre>name: CustomIdentifier | null
+args: [ CustomPattern ]
+body: CustomStatement | CustomExpression
+isGenerator: boolean
+isExpression: boolean
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomExpression</p>
+<p>Callback to produce a custom function expression node.</p>
+<h5 id="arrayExpression(elts.5B.2C_loc.5D)"><code>arrayExpression(elts[, loc])</code></h5>
+<pre>elts: [ CustomExpression | null ]
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomExpression</p>
+<p>Callback to produce a custom array expression node.</p>
+<h5 id="objectExpression(props.5B.2C_loc.5D)"><code>objectExpression(props[, loc])</code></h5>
+<pre>props: [ CustomObjectProperty ]
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomExpression</p>
+<p>Callback to produce a custom object expression node.</p>
+<h5 id="thisExpression(.5Bloc.5D)"><code>thisExpression([loc])</code></h5>
+<pre>loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomExpression</p>
+<p>Callback to produce a custom <code>this</code> expression node.</p>
+<h5 id="graphExpression(index.2C_expr.5B.2C_loc.5D)"><code>graphExpression(index, expr[, loc])</code></h5>
+<pre>index: uint32 &gt;= 1
+expr: CustomExpression
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomExpression</p>
+<p>Callback to produce a custom <code>graph</code> expression node.</p>
+<h5 id="graphIndexExpression(index.5B.2C_loc.5D)"><code>graphIndexExpression(index[, loc])</code></h5>
+<pre>index: uint32 &gt;= 1
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomExpression</p>
+<p>Callback to produce a custom <code>graph index</code> expression node.</p>
+<h5 id="comprehensionExpression(body.2C_blocks.2C_filter.5B.2C_loc.5D)"><code>comprehensionExpression(body, blocks, filter[, loc])</code></h5>
+<pre>body: CustomExpression
+blocks: [ CustomComprehensionBlock ]
+filter: CustomExpression | null
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomExpression</p>
+<p>Callback to produce a custom <code>comprehension</code> expression node.</p>
+<h5 id="generatorExpression(body.2C_blocks.2C_filter.5B.2C_loc.5D)"><code>generatorExpression(body, blocks, filter[, loc])</code></h5>
+<pre>body: CustomExpression
+blocks: [ CustomComprehensionBlock ]
+filter: CustomExpression | null
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomExpression</p>
+<p>Callback to produce a custom <code>generator</code> expression node.</p>
+<h5 id="yieldExpression(arg.5B.2C_loc.5D)"><code>yieldExpression(arg[, loc])</code></h5>
+<pre>arg: CustomExpression
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomExpression</p>
+<p>Callback to produce a custom <code>yield</code> expression node.</p>
+<h5 id="letExpression(head.2C_body.5B.2C_loc.5D)"><code>letExpression(head, body[, loc])</code></h5>
+<pre>head: [ CustomDeclarator ]
+body: CustomExpression
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomExpression</p>
+<p>Callback to produce a custom <code>let</code> expression node.</p>
+<h3 id="Patterns_2">Patterns</h3>
+<h5 id="arrayPattern(elts.5B.2C_loc.5D)"><code>arrayPattern(elts[, loc])</code></h5>
+<pre>elts: [ CustomPattern | null ]
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomPattern</p>
+<p>Callback to produce a custom array destructuring pattern node.</p>
+<h5 id="objectPattern(props.5B.2C_loc.5D)"><code>objectPattern(props[, loc])</code></h5>
+<pre>props: [ CustomPropertyPattern ]
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomPattern</p>
+<p>Callback to produce a custom object destructuring pattern node.</p>
+<h5 id="propertyPattern(key.2C_patt.5B.2C_loc.5D)"><code>propertyPattern(key, patt[, loc])</code></h5>
+<pre>key: CustomLiteral | CustomIdentifier
+patt: CustomPattern
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomPropertyPattern</p>
+<p>Callback to produce a custom object property destructuring pattern node.</p>
+<h3 id="Clauses_2">Clauses</h3>
+<h5 id="switchCase(test.2C_cons.5B.2C_loc.5D)"><code>switchCase(test, cons[, loc])</code></h5>
+<pre>test: CustomExpression | null
+cons: [ CustomStatement ]
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomSwitchCase</p>
+<p>Callback to produce a custom <code>case</code> or <code>default</code> clause node. The <strong><code>test</code></strong> argument is <code>null</code> if and only if the node is a <code>default</code> clause.</p>
+<h5 id="catchClause(arg.2C_guard.2C_body.5B.2C_loc.5D)"><code>catchClause(arg, guard, body[, loc])</code></h5>
+<pre>arg: CustomPattern
+guard: CustomExpression
+body: CustomStatement
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomCatchClause</p>
+<p>Callback to produce a custom <code>catch</code> clause node.</p>
+<h5 id="comprehensionBlock(left.2C_right.2C_isForEach.5B.2C_loc.5D)"><code>comprehensionBlock(left, right, isForEach[, loc])</code></h5>
+<pre>left: CustomPattern
+right: CustomExpression
+isForEach: boolean
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomComprehensionBlock</p>
+<p>Callback to produce a custom comprehension block node. The <strong><code>isForEach</code></strong> flag indicates whether the node is a <code>for each</code> block.</p>
+<h3 id="Miscellaneous_2">Miscellaneous</h3>
+<h5 id="identifier(name.5B.2C_loc.5D)"><code>identifier(name[, loc])</code></h5>
+<pre>name: string
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomIdentifier/CustomPattern/CustomExpression</p>
+<p>Callback to produce a custom identifier node.</p>
+<h5 id="literal(val.5B.2C_loc.5D)"><code>literal(val[, loc])</code></h5>
+<pre>val: string | boolean | null | number | RegExp
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomLiteral / CustomExpression</p>
+<p>Callback to produce a custom literal node.</p>
+<h5 id="property(kind.2C_key.2C_val.5B.2C_loc.5D)"><code>property(kind, key, val[, loc])</code></h5>
+<pre>kind: "init" | "get" | "set"
+key: CustomLiteral | CustomIdentifier
+val: CustomExpression
+loc: SourceLocation 
+</pre>
+<p><strong>Returns:</strong> CustomObjectProperty</p>
+<p>Callback to produce a custom object property initializer node.</p>
+<h3 id="E4X_2">E4X</h3>
+<h4 id="Declarations_4">Declarations</h4>
+<h5 id="xmlDefaultDeclaration(ns.5B.2C_loc.5D)"><code>xmlDefaultDeclaration(ns[, loc])</code></h5>
+<pre>loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomDeclaration</p>
+<p>Callback to produce a custom XML default namespace declaration node.</p>
+<h4 id="Expressions_4">Expressions</h4>
+<h5 id="xmlAnyName(.5Bloc.5D)"><code>xmlAnyName([loc])</code></h5>
+<pre>loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomXMLAnyName/CustomXML/CustomExpression</p>
+<p>Callback to produce a custom XML node for the wildcard pseudo-identifier <code>*</code>.</p>
+<h5 id="xmlAttributeSelector(expr.5B.2C_loc.5D)"><code>xmlAttributeSelector(expr[, loc])</code></h5>
+<pre>expr: CustomExpression
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomXML/CustomExpression</p>
+<p>Callback to produce a custom XML attribute selector node.</p>
+<h5 id="xmlFilterExpression(left.2C_right.5B.2C_loc.5D)"><code>xmlFilterExpression(left, right[, loc])</code></h5>
+<pre>left: CustomExpression
+right: CustomExpression
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomXML/CustomExpression</p>
+<p>Callback to produce a custom XML filter expression node.</p>
+<h5 id="xmlQualifiedIdentifier(left.2C_right.2C_isComputed.5B.2C_loc.5D)"><code>xmlQualifiedIdentifier(left, right, isComputed[, loc])</code></h5>
+<pre>left: CustomIdentifier | CustomXMLAnyName
+right: CustomIdentifier | CustomExpression
+isComputed: boolean
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomXML/CustomExpression</p>
+<p>Callback to produce a custom qualified identifier node.</p>
+<h5 id="xmlFunctionQualifiedIdentifier(right.2C_isComputed.5B.2C_loc.5D)"><code>xmlFunctionQualifiedIdentifier(right, isComputed[, loc])</code></h5>
+<pre>right: CustomIdentifier | CustomExpression
+isComputed: boolean
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomXML/CustomExpression</p>
+<p>Callback to produce a custom XML <code>function</code>-qualified identifier node.</p>
+<h5 id="xmlElement(contents.5B.2C_loc.5D)"><code>xmlElement(contents[, loc])</code></h5>
+<pre>contents: [ CustomXML ]
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomXML/CustomExpression</p>
+<p>Callback to produce a custom XML element node.</p>
+<h5 id="xmlList(contents.5B.2C_loc.5D)"><code>xmlList(contents[, loc])</code></h5>
+<pre>contents: [ CustomXML ]
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomXML/CustomExpression</p>
+<p>Callback to produce a custom XML list node.</p>
+<h4 id="XML_2">XML</h4>
+<h5 id="xmlEscape(expr.5B.2C_loc.5D)"><code>xmlEscape(expr[, loc])</code></h5>
+<pre>expr: CustomExpression
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomXML</p>
+<p>Callback to produce a custom XML escape node.</p>
+<h5 id="xmlText(text.5B.2C_loc.5D)"><code>xmlText(text[, loc])</code></h5>
+<pre>text: string
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomXML</p>
+<p>Callback to produce a custom XML text node.</p>
+<h5 id="xmlStartTag(contents.5B.2C_loc.5D)"><code>xmlStartTag(contents[, loc])</code></h5>
+<pre>contents: [ CustomXML ]
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomXML</p>
+<p>Callback to produce a custom XML start-tag node.</p>
+<h5 id="xmlEndTag(contents.5B.2C_loc.5D)"><code>xmlEndTag(contents[, loc])</code></h5>
+<pre>contents: [ CustomXML ]
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomXML</p>
+<p>Callback to produce a custom XML end-tag node.</p>
+<h5 id="xmlPointTag(contents.5B.2C_loc.5D)"><code>xmlPointTag(contents[, loc])</code></h5>
+<pre>contents: [ CustomXML ]
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomXML</p>
+<p>Callback to produce a custom XML point tag node.</p>
+<h5 id="xmlName(contents.5B.2C_loc.5D)"><code>xmlName(contents[, loc])</code></h5>
+<pre>contents: string | [ CustomXML ]
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomXML</p>
+<p>Callback to produce a custom XML name node.</p>
+<h5 id="xmlAttribute(value.5B.2C_loc.5D)"><code>xmlAttribute(value[, loc])</code></h5>
+<pre>value: string
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomXML</p>
+<p>Callback to produce a custom XML attribute node.</p>
+<h5 id="xmlCdata(contents.5B.2C_loc.5D)"><code>xmlCdata(contents[, loc])</code></h5>
+<pre>contents: string
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomXML</p>
+<p>Callback to produce a custom XML <code>CDATA</code> node.</p>
+<h5 id="xmlComment(contents.5B.2C_loc.5D)"><code>xmlComment(contents[, loc])</code></h5>
+<pre>contents: string
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomXML</p>
+<p>Callback to produce a custom XML comment node.</p>
+<h5 id="xmlProcessingInstruction(target.2C_contents.5B.2C_loc.5D)"><code>xmlProcessingInstruction(target, contents[, loc])</code></h5>
+<pre>target: string
+contents: string | null
+loc: SourceLocation
+</pre>
+<p><strong>Returns:</strong> CustomXML</p>
+<p>Callback to produce a custom XML processing instruction node.</p>
+                                                </article>
+
+              
+                <!-- attachments list -->
+                
+                <!-- contributors -->
+                <div class="wiki-block contributors">
+                  <h2 class="offscreen">Document Tags and Contributors</h2>
+                                                      <!-- tags if present -->
+                  <div class="tag-attach-list tags contributor-sub">
+                    <i aria-hidden="true" class="icon-tags"></i><strong>Tags:</strong>
+                    <ul class="tag-list"><li><a href="/en-US/docs/tag/Guide">Guide</a></li><li><a href="/en-US/docs/tag/API">API</a></li><li><a href="/en-US/docs/tag/SpiderMonkey">SpiderMonkey</a></li><li><a href="/en-US/docs/tag/JavaScript">JavaScript</a></li></ul>
+                  </div>
+                                    <div class="contributor-sub"> <i aria-hidden="true" class="icon-group"></i><strong>Contributors to this page:</strong> <a href="/en-US/profiles/jswisher">jswisher</a>, <a href="/en-US/profiles/kscarfone">kscarfone</a>, <a href="/en-US/profiles/jbclements">jbclements</a>, <a href="/en-US/profiles/Dherman">Dherman</a>, <a href="/en-US/profiles/Sheppy">Sheppy</a>, <a href="/en-US/profiles/fscholz">fscholz</a>, <a href="/en-US/profiles/mattbasta">mattbasta</a>, <a href="/en-US/profiles/jcsmnt0">jcsmnt0</a>, <a href="/en-US/profiles/trevorh">trevorh</a>, <a href="/en-US/profiles/victorporof">victorporof</a>, <a href="/en-US/profiles/SarahWalrus">SarahWalrus</a>, <a href="/en-US/profiles/Waldo">Waldo</a>, <a href="/en-US/profiles/RReverser">RReverser</a>, <a href="/en-US/profiles/Wladimir_Palant">Wladimir_Palant</a>, <a href="/en-US/profiles/Mook(as)">Mook(as)</a>, <a href="/en-US/profiles/Inimino">Inimino</a>, <a href="/en-US/profiles/Marijn">Marijn</a>, <a href="/en-US/profiles/so_matt_basta">so_matt_basta</a>, <a href="/en-US/profiles/sajidraza">sajidraza</a>, <a href="/en-US/profiles/Jed">Jed</a>, <a href="/en-US/profiles/berkerpeksag">berkerpeksag</a>, <a href="/en-US/profiles/michaelficarra">michaelficarra</a> </div>                                      <div class="contributor-sub">
+                      <i aria-hidden="true" class="icon-time"></i><strong>Last updated by:</strong>
+                      <a href="/en-US/profiles/fscholz">fscholz</a>,
+                      <time datetime="2014-05-02T06:49:21-07:00">May 2, 2014 6:49:21 AM</time>
+                    </div>
+                                  </div>
+                          </div>
+
+                      </div>
+        </div>
+      </div>
+    </div> <!-- ends "main-content" -->
+
+  <menu type="context" id="edit-history-menu">
+    <menuitem data-action="$edit" label="Edit page"></menuitem>
+    <menuitem data-action="$history" label="View page history"></menuitem>
+  </menu>
+  </div></main>
+
+  <!-- Footer -->
+  <footer><div class="center">
+    <div class="column-container">
+      <div class="column-main">
+                <p>
+          <bdi>&copy; 2005-2014 Mozilla Developer Network and individual contributors<br /> Content is available under <a href="/en-US/docs/Project:MDN/About#Copyrights_and_licenses">these licenses</a> &middot; <a href="/en-US/docs/Project:MDN/About">About MDN</a> &middot; <a href="//github.com/mozilla/kuma">Contribute to the code</a> &middot; <a href="//www.mozilla.org/privacy/websites/">Privacy policy</a></bdi>        </p>
+              </div>
+      <div class="column-strip">
+                        <form class="languages go" method="get" action="/en-US/docs/Web">
+      <label for="language">Other languages:</label>
+      <select id="language" class="wiki-l10n" name="next" dir="ltr">
+        <option value="/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API" selected>
+          English (US)
+        </option>
+                  <option value="/zh-CN/docs/Mozilla/Projects/SpiderMonkey/Parser_API">
+            中文 (简体)
+          </option>      </select>
+      <noscript><button type="submit">Go</button></noscript>
+    </form>
+                </div>
+    </div>
+  </div></footer>
+
+  <!-- site js -->
+    <script src="/en-US/jsi18n/build:410b053"></script>
+  
+      <!--[if lte IE 8]><script src="/media/redesign/js/libs/selectivizr-1.0.2/selectivizr-build.js?build=410b053"></script><![endif]-->
+
+    <script src="https://developer.cdn.mozilla.net/media/js/main-min.js?build=410b053"></script>
+
+          <script>
+        mdn.analytics.trackOutboundLinks(document.body);
+      </script>
+    
+          <script src="https://developer.cdn.mozilla.net/media/js/wiki-min.js?build=410b053"></script>
+      
+  <script src="//mozorg.cdn.mozilla.net/en-US/tabzilla/tabzilla.js" async></script>
+
+      <script type="text/javascript">
+      jQuery('.from-search-toc').mozSearchResults('');
+  </script>
+  
+  <script type="text/javascript">if(!NREUMQ.f){NREUMQ.f=function(){NREUMQ.push(["load",new Date().getTime()]);var e=document.createElement("script");e.type="text/javascript";e.src=(("http:"===document.location.protocol)?"http:":"https:")+"//"+"js-agent.newrelic.com/nr-100.js";document.body.appendChild(e);if(NREUMQ.a)NREUMQ.a();};NREUMQ.a=window.onload;window.onload=NREUMQ.f;};NREUMQ.push(["nrfj","beacon-3.newrelic.com","42869b6ed3","3172075","b1QHMUtVDRdSW0YKXVYeIxBXVxcNXFYdFFtTWEsTUFEUFwlcXQBHVVQLEQ==",0,381,new Date().getTime(),"","","","",""]);</script></body>
+</html>
