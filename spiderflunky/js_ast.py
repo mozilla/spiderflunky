@@ -9,7 +9,7 @@ from parsimonious.nodes import NodeVisitor
 from parsimonious.exceptions import ParseError
 from more_itertools import first
 from toposort import toposort_flatten
-from itertools import repeat
+from itertools import repeat, izip
 import sys
 import pkg_resources
 
@@ -22,7 +22,7 @@ class BaseNode(dict):
 
     """
     def __init__(self, parent, *args, **kwargs):
-        dict.__init__(self, *args, **kwargs)
+        super(BaseNode, self).__init__(*args, **kwargs)
         self.parent = parent
 
     def walk_up(self):
@@ -64,7 +64,7 @@ class BaseNode(dict):
         stored in each node type.
 
         """
-        return self._children() or []
+        return self._children()
 
     def nearest_scope(self):
         """Return the closest containing scope, constructing and caching it
@@ -74,9 +74,7 @@ class BaseNode(dict):
         return self.nearest_scope_holder().scope()
 
     def scope_chain(self):
-        """Yield each scope-defining node from myself upward.
-
-        """
+        """Yield each scope-defining node from myself upward."""
         node = self.nearest_scope_holder()
         while True:
             yield node
@@ -105,9 +103,7 @@ class BaseNode(dict):
         return node  # global
 
     def scope(self,):
-        """Return the set of symbols declared exactly at this node.
-
-        """
+        """Return the set of symbols declared exactly at this node."""
         return set()
 
 
@@ -115,37 +111,28 @@ def _clean(text):
     return text.replace(u'\xa0', u' ')
 
 
-def _get_specs(parser, parser_api_htm):
-    specs = (_clean(elem.text) for elem in PyQuery(parser_api_htm)('pre'))
-    visitor = SpecVisitor()
-    for spec in specs:
-        try:
-            yield visitor.visit(parser.parse(spec))
-        except ParseError:
-            pass
-
-
-def get_specs(*args, **kwargs):
+def get_specs(parser, parser_api_htm):
     """Return a list of specs (the results of the SpecVisitor)
     based on Mozilla ParserAPI.
 
     parser: parser for the grammar
     filename: location of the Mozilla Parser API
     """
-    return list(_get_specs(*args, **kwargs))
+    specs = (_clean(elem.text) for elem in PyQuery(parser_api_htm)('pre'))
+    visitor = SpecVisitor()
+    for spec in (s for s in specs if s.lstrip().startswith('interface')):
+        yield visitor.visit(parser.parse(spec))
 
 
 def dependency_order(specs):
-    dep_map = {name: set(parents) for (name, parents, _) in specs}
+    dep_map = dict((name,set(parents)) for (name, parents, _) in specs)
     return toposort_flatten(dep_map)
 
 
 def get_class_map(specs):
-    """Based on a list of specifications, return a mapping name->cls
-
-    """
+    """Based on a list of specifications, return a mapping name->cls."""
     dep_order = dependency_order(specs)
-    spec_map = {name: (parents, vals) for name, parents, vals in specs}
+    spec_map = dict((name, (parents, vals)) for name, parents, vals in specs)
     class_map = {}
     for name in dep_order:
         class_map[name] = _node_class_factory(class_map, name, *spec_map[name])
@@ -153,12 +140,10 @@ def get_class_map(specs):
 
 
 def _flatten(lis):
-    """Flattens nonuniform nested iterators.
-
-    """
+    """Flattens nonuniform nested iterators."""
     # based on http://stackoverflow.com/a/2158532
     for elem in lis:
-        if isinstance(elem, list) and not isinstance(elem, basestring):
+        if isinstance(elem, list):
             for sub in _flatten(elem):
                 yield sub
         else:
@@ -166,9 +151,7 @@ def _flatten(lis):
 
 
 def function_scope(self):
-    """Return the set of symbols declared exactly at this node.
-
-    """
+    """Return the set of symbols declared exactly at this node."""
     # We store a set of symbols at each node that can hold a scope, except
     # that we don't bother for the Program (global) scope. It holds
     # everything we couldn't find elsewhere.
@@ -185,13 +168,11 @@ def function_scope(self):
 
 
 def _node_class_factory(class_map, name, parents, fields):
-    """Returns a class representing an AST node.
-
-    """
+    """Return a class representing an AST node."""
     # Could perhaps be replaced by an explicit MetaClass
     def _children(self):
         fields_vals = filter(lambda val: isinstance(val, BaseNode),
-                             _flatten((self[f] for f in fields)))
+                             _flatten(self[f] for f in fields))
         return fields_vals
 
     __dict__ = {'_children': _children}
@@ -203,7 +184,7 @@ def _node_class_factory(class_map, name, parents, fields):
 
 
 def set_parents(root):
-    """Sets the parent attribute for all nodes in the tree.
+    """Set the parent attribute for all nodes in the tree.
     Root's parent is None
 
     """
@@ -211,14 +192,14 @@ def set_parents(root):
     while queue:
         node, parent = queue.pop()
         node.parent = parent
-        queue.extend(zip(node.children(), repeat(node)))
+        queue.extend(izip(node.children(), repeat(node)))
 
 
 API_GRAMMAR = r"""
 start = _ interface _
 interface = "interface" __ id _ inherit? _ "{" _ attrs? _ "}"
 
-ops = "\"" op "\"" (_ "|" _ ops)?
+ops = '"' op '"' (_ "|" _ ops)?
 op = ~r'([^{}"\s])+'
 
 inherit = "<:" __ parents
@@ -248,13 +229,13 @@ class SpecVisitor(NodeVisitor):
     Returns (name of interface, parents, fields)
 
     """
-    def visit_start(self, node, children):
-        return children[1]
+    def visit_start(self, node, (_, interface, __)):
+        return interface
 
-    def visit_interface(self, node, children):
-        name = children[2]
-        inherit = children[4][0] if children[4] else []
-        attrs = children[8][0] if children[8] else []
+    def visit_interface(self, node, (_0, _1, name, _2, maybe_inherit, _3, _4,
+                                     _5, maybe_attrs, _6, _7)):
+        inherit = maybe_inherit[0] if maybe_inherit else []
+        attrs = maybe_attrs[0] if maybe_attrs else []
         return (name, inherit, attrs)
 
     def visit_inherit(self, _, (__, ___, parents)):
@@ -276,19 +257,19 @@ class SpecVisitor(NodeVisitor):
     def generic_visit(self, _, visited_children):
         return visited_children
 
-API_PARSER = Grammar(API_GRAMMAR)
+api_parser = Grammar(API_GRAMMAR)
 
 
 def node_hook(json_dict):
     """This is a object hook for the json loads function.
 
     """
-    return CLASS_MAP.get(json_dict.get('type'), BaseNode)(None, json_dict)
+    return class_map.get(json_dict.get('type'), BaseNode)(None, json_dict)
 
 # Inject classes from spec into module
-PARSER_API_HTM = pkg_resources.resource_string(__name__, "Parser_API.htm")
+PARSER_API_HTM = pkg_resources.resource_string(__name__, "Parser_API.html")
 
-CLASS_MAP = get_class_map(get_specs(API_PARSER, PARSER_API_HTM))
-THIS_MODULE = sys.modules[__name__]
-for cls_name, cls in CLASS_MAP.items():
-    setattr(THIS_MODULE, cls_name, cls)
+class_map = get_class_map(list(get_specs(api_parser, PARSER_API_HTM)))
+this_module = sys.modules[__name__]
+for cls_name, cls in class_map.items():
+    setattr(this_module, cls_name, cls)
