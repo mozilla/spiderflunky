@@ -267,9 +267,9 @@ def node_hook(json_dict):
     return class_map.get(json_dict.get('type'), BaseNode)(None, json_dict)
 
 # Inject classes from spec into module
-PARSER_API_HTM = pkg_resources.resource_string(__name__, "Parser_API.html")
+PARSER_API_HTML = pkg_resources.resource_string(__name__, "Parser_API.html")
 
-class_map = get_class_map(list(get_specs(api_parser, PARSER_API_HTM)))
+class_map = get_class_map(list(get_specs(api_parser, PARSER_API_HTML)))
 this_module = sys.modules[__name__]
 for cls_name, cls in class_map.items():
     setattr(this_module, cls_name, cls)
