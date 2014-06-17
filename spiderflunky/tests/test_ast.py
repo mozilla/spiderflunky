@@ -1,16 +1,29 @@
 from more_itertools import first
 from nose.tools import eq_
 
-from spiderflunky.parser import parse, Node
+from spiderflunky.js_ast import BaseNode, set_parents
+from spiderflunky.parser import parse
 
+
+class Node(BaseNode):
+    def _children(self):
+        return self['body']
+ast = Node(None, {'a': 1, 'body': [Node(None, {'a': 2, 'body': [Node(None, {'a': 3, 'body': []})]}),
+                                               Node(None, {'a': 4, 'body': []})]})
+set_parents(ast)
 
 def test_walk_down_order():
     """Test a contrived case where we can test that the visitation order it
     right."""
-    ast = Node({'a': 1, 'body': [Node({'a': 2, 'body': [Node({'a': 3, 'body': []})]}),
-                                 Node({'a': 4, 'body': []})]})
+    
     eq_([node['a'] for node in ast.walk_down()], [1, 2, 3, 4])
 
+
+def test_traversal_invariances():
+    eq_(ast, ast.children()[0].parent)
+    eq_(ast, list(list(ast.walk_down())[-1].walk_up())[-1])
+
+    
 
 def test_walk_down_smoke():
     """Try it on some real code, and make sure it doesn't crash.

@@ -3,8 +3,9 @@ import os
 import re
 import subprocess
 import tempfile
-from .js_ast import Program, make_node
+from .js_ast import node_hook, set_parents
 import simplejson as json
+from functools import partial
 
 
 class JsReflectException(Exception):
@@ -21,19 +22,14 @@ class JsReflectException(Exception):
         return self.__unicode__().encode('utf-8')
 
 
-def parse(code, **kwargs):
-    """Construct a ``Program`` of the given JS code.
-
-    :arg shell: Path to the ``js`` interpreter
-
-    """
-    ast = Program(raw_parse(code, **kwargs))
-    ast.finalize()
-    return ast
-
 ERROR_CODE = 100
 
-def raw_parse(code, shell='js', object_hook=make_node):
+
+def parse(code, shell='js'):
+    return raw_parse(code, node_hook, shell)
+
+
+def raw_parse(code, object_hook, shell):
     """Return an AST of the JS passed in ``code`` in native Reflect.parse
     format
 
@@ -77,6 +73,7 @@ def raw_parse(code, shell='js', object_hook=make_node):
             raise RuntimeError('Error calling %r: %s' % (cmd, data))
 
         data = decode(data)
+
         parsed = json.loads(data, strict=False, object_hook=object_hook)
 
         if error_code == ERROR_CODE:
@@ -89,6 +86,9 @@ def raw_parse(code, shell='js', object_hook=make_node):
                 else:
                     raise JsReflectException(parsed["error_message"],
                                              line=parsed["line_number"])
+        else:
+            set_parents(parsed)
+
         # Closing the temp file will delete it.
     finally:
         try:
