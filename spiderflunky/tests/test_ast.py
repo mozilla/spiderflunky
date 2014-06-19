@@ -60,4 +60,4 @@ def test_scope_building():
     ast = parse(js)
     function = first(node for node in ast.walk_down() if
                      node['type'] == 'FunctionDeclaration')
-    eq_(function.scope(), set(['w', 'x', 'y']))
+    eq_(function.scope(), set(['w', 'x', 'y', 'smoo', 'bar']))

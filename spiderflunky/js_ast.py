@@ -51,6 +51,7 @@ class BaseNode(dict):
             yield self
         for child in self.children():
             if skip(child):
+                yield child
                 continue
             # Just a "yield from":
             for ret in child.walk_down(skip=skip):
@@ -162,7 +163,7 @@ def function_scope(self):
         self['_scope'] = set(
             node['id']['name'] for node in self.walk_down(
                 skip=lambda n: isinstance(n, FunctionDeclaration))
-            if isinstance(node, VariableDeclarator)) | \
+            if isinstance(node, (VariableDeclarator, FunctionDeclaration))) | \
             set(param['name'] for param in self['params'])
     return self['_scope']
 
