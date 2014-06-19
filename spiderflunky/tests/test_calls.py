@@ -1,7 +1,7 @@
 from nose import SkipTest
 from nose.tools import eq_
 
-from spiderflunky.calls import call_sites
+from spiderflunky.calls import call_sites, call_graph, get_name
 from spiderflunky.parser import parse
 
 
@@ -22,28 +22,47 @@ def test_call_sites():
 
 def test_simple():
     """Assert we notice simple calls to functions stored in global scope."""
-    raise SkipTest
     js = """function answer() {}
 
             function call() {
                 answer();
             }"""
+    ast = parse(js)
+    g = call_graph(ast)
+    eq_(set([(get_name(x), get_name(y)) for x,y in g.edges()]),
+        set([('call', 'answer')]))
+
     #ok_(callee definitions, callsite, list of assignments through which is percolated
+
 
 
 def test_nested():
     """Assert we identify calls to functions within the calling scope."""
-    raise SkipTest
     js = """function call() {
                 function answer() {}
 
                 answer();
             }"""
+    ast = parse(js)
+    g = call_graph(ast)
+    eq_(set([(get_name(x), get_name(y)) for x,y in g.edges()]),
+        set([('call', 'answer')]))
 
 
 def test_traverse():
     """Show that we can follow a function as it flows through simple
     assignments."""
+    raise SkipTest
+    js = """function answer() {}
+
+            var indirect_answer = answer;
+
+            function call() {
+                indirect_answer();
+            }"""
+
+
+def test_traverse2():
     raise SkipTest
     js = """function answer() {}
 

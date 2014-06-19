@@ -1,7 +1,7 @@
 from more_itertools import first
 from nose.tools import eq_
 
-from spiderflunky.js_ast import BaseNode, set_parents
+from spiderflunky.js_ast import BaseNode, set_parents, FunctionDeclaration
 from spiderflunky.parser import parse
 
 
@@ -46,18 +46,23 @@ def test_walk_down_smoke():
 def test_scope_building():
     """Make sure we find all the declarations within a function but don't stray
     into inner functions."""
-    js = """function smoo() {
-                var w, x;
-                
-                if (true) {
-                    var y;
-                }
-                
-                function bar() {
-                    var z;
-                }
-            }"""
+    js = """
+function smoo() {
+    var w, x;
+    if (true) {
+        var y;
+    }
+    function bar() {
+        var z;
+    }
+}
+function barbar() {
+
+}
+    """
     ast = parse(js)
     function = first(node for node in ast.walk_down() if
-                     node['type'] == 'FunctionDeclaration')
-    eq_(function.scope(), set(['w', 'x', 'y', 'smoo', 'bar']))
+                     isinstance(node, FunctionDeclaration))
+    eq_(set(function.scope().keys()), set(['w', 'x', 'y', 'smoo', 'bar']))
+
+    eq_(set(ast.scope().keys()), set(['smoo', 'barbar']))

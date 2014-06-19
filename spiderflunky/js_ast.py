@@ -101,11 +101,15 @@ class BaseNode(dict):
         for node in self.scope_chain():
             if symbol_name in node.scope():
                 return node
+        # TODO: this might actually be a bug. If its not in the program's scope its undefined
         return node  # global
 
     def scope(self,):
         """Return the set of symbols declared exactly at this node."""
-        return set()
+        return dict()
+
+    def __hash__(self):
+        return id(self)
 
 
 def _clean(text):
@@ -151,21 +155,37 @@ def _flatten(lis):
             yield elem
 
 
+def _hoisted_scope(tree):
+    return dict((node['id']['name'], node) for node
+                in tree.walk_down(skip=lambda n: isinstance(n, FunctionDeclaration))
+                if isinstance(node, (VariableDeclarator, FunctionDeclaration)))
+
 def function_scope(self):
     """Return the set of symbols declared exactly at this node."""
     # We store a set of symbols at each node that can hold a scope, except
     # that we don't bother for the Program (global) scope. It holds
     # everything we couldn't find elsewhere.
+    # TODO look at 'kind' of variable declaration
 
     if '_scope' not in self:  # could store this in an instance var
         # Find all the var decls within me, but don't go within any other
         # functions. This implements hoisting.
-        self['_scope'] = set(
-            node['id']['name'] for node in self.walk_down(
-                skip=lambda n: isinstance(n, FunctionDeclaration))
-            if isinstance(node, (VariableDeclarator, FunctionDeclaration))) | \
-            set(param['name'] for param in self['params'])
+        self['_scope'] = dict((self, param['name']) for param in self['params'])
+        self['_scope'].update(_hoisted_scope(self))
     return self['_scope']
+
+def program_scope(self):
+    if '_scope' not in self:  # could store this in an instance var
+        # Find all the var decls within me, but don't go within any other
+        # functions. This implements hoisting.
+        self['_scope'] = _hoisted_scope(self)
+    return self['_scope']
+
+
+def function_repr(self):
+    if self['id'] is None:
+        return str(None)
+    return self['id']['name']
 
 
 def _node_class_factory(class_map, name, parents, fields):
@@ -179,6 +199,11 @@ def _node_class_factory(class_map, name, parents, fields):
     __dict__ = {'_children': _children}
     if "params" in fields:
         __dict__['scope'] = function_scope
+        __dict__['__repr__'] = function_repr
+
+    elif name == "Program":
+        __dict__['scope'] = program_scope
+        __dict__['__repr__'] = lambda self: "Program"
 
     bases = tuple(map(class_map.get, parents)) if parents else (BaseNode,)
     return type(str(name), bases, __dict__)
