@@ -1,26 +1,62 @@
+from spiderflunky.js_ast import CallExpression, FunctionExpression, Identifier
 from spiderflunky.parser import parse
+
+from networkx import DiGraph
 
 
 def call_sites(ast):
     """Yield the AST nodes representing function calls."""
-    return (node for node in ast.walk_down() if node['type'] == 'CallExpression')
+    return (node for node in ast.walk_down() if isinstance(node, CallExpression))
 
 
 def call_graph(ast):
-    """Return an iterable of (callee, callsite, data path through which the
-    callee got to the callsite).
+    """Return a call graph (networkx.Diagraph) caller ---(callsite)---> callee.
 
     All values are represented as AST nodes. You can straightforwardly pull
     line and column numbers out and apply them to the original code to get
     excerpts.
 
     """
-    # Call scope_of() on each of the symbols in assignments(), and add an edge from (left symbol name, left scope ID) to (right symbol name, right scope ID). When it terminates in a literal, add a vertex for that; we'll use that to highlight the ultimate answer. There's probably a good way to avoid graphing *all* the assignments (like maybe finding all the call sites and then working backwards up the assignment chain), but that's for later.
+    graph = DiGraph()
+    for call_site in call_sites(ast):
+        graph.add_edge(call_site.nearest_scope_holder(), lookup(call_site),
+                       call_site=call_site)
+    return graph
 
 
-def call_sites_for(function_node):
+def call_sites_for(function_node, graph):
     """Return a list of call-site nodes where a given function node is
-    called."""
-    # Get the scope() of the function_node, then walk from that vertex of the graph to everywhere you can get, returning each. We might want to put something more descriptive than symbol names and scope nodes in the graph: it would be nice to be able to highlight the actual original value.
+    called.
 
-    # End when you detect a cycle.
+    """
+    return (graph.get_edge_data(src, dst)['call_site'] for src, dst 
+            in graph.edges() if dst == function_node)
+
+
+def lookup(call_site):
+    """Look up the declaration of this call_site."""
+    # Check if scope_of or its children has the same id as the call_site'
+    callee = call_site['callee']
+    if isinstance(callee, FunctionExpression):
+        if callee['id'] is None:            
+            return None
+        return callee['id']['name']
+    elif isinstance(callee, Identifier):
+        name = call_site['callee']['name']
+        return call_site.scope_of(name).scope().get(name, None)
+    else:
+        import ipdb; ipdb.set_trace()
+        return None
+
+def get_name(node):
+    """Return the identifier for this node."""
+
+    if 'id' not in node:
+        return str(type(node))
+
+    ident = node['id']
+    if ident is None:
+        return str(None)
+    return ident.get('name', str(None))
+
+    

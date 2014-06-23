@@ -19,7 +19,7 @@ setup(
     author_email='erik@mozilla.com',
     license='MPL',
     packages=find_packages(exclude=['ez_setup']),
-    install_requires=['more_itertools>=2.1', 'toposort>=1.0'],
+    install_requires=['more_itertools>=2.1', 'toposort>=1.0', 'networkx'],
     tests_require=['nose'],
     test_suite='nose.collector',
     url='https://github.com/erikrose/spiderflunky',
