@@ -9,6 +9,7 @@ from parsimonious.nodes import NodeVisitor
 
 Span = namedtuple('Span', ['start', 'end'])
 Position = namedtuple('Position', ['offset', 'row', 'col'])
+FuncSig = namedtuple('FuncSig', ['input', 'output'])
 
 class SpanVisitor(NodeVisitor):
     def visit_num(self, node, _):
@@ -28,8 +29,6 @@ span = num pos "-" num pos
 pos = "[" num ":" num "]"
 num = ~r"\d+"
 """)
-
-FuncSig = namedtuple('FuncSig', ['input', 'output'])
 
 class ValueVisitor(NodeVisitor):
     def visit_val(self, node, (val,)):
@@ -104,10 +103,8 @@ def check_output(*popenargs, **kwargs):
     output, unused_err = process.communicate()
     return output
 
-CONDENSE_PATH = "/home/mvc/node_modules/tern/bin/condense"
-
-def get_condensed(fpath):
-    condensed = check_output([CONDENSE_PATH, fpath])
+def get_condensed(fpath, condense_path):
+    condensed = check_output([condense_path, fpath])
     return json.loads(condensed, object_hook=hook)
 
 def symbols(condensed):
