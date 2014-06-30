@@ -172,7 +172,7 @@ def get_ref(condensed, span):
 def refs(address, condensed, spans):
     return (get_ref(address, condensed, span) for span in spans)
 
-def callsites(address, condensed):
+def call_sites(address, condensed):
     """Return all callsites."""
     spans = (func['!span'] for _, func in functions(condensed))
     return refs(address, condensed, spans)
