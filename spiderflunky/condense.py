@@ -146,7 +146,7 @@ def tern_request(func):
     @wraps(func)
     def _tern_request(address, *args, **kwargs):
         req = requests.post(address, json.dumps(func(*args, **kwargs)))
-        return json.loads(req.text)
+        return req.json()
     return _tern_request
 
 @tern_request
