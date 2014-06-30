@@ -42,7 +42,7 @@ class ValueVisitor(NodeVisitor):
 
     def visit_func(self, _, (_1, _2, args, _3, _type)):
         if _type == []:
-            _type = [None]        
+            _type = [None]
         return FuncSig(args, _type[0])
 
     def visit_arg(self, _, (name, _type, _2)):
@@ -50,7 +50,7 @@ class ValueVisitor(NodeVisitor):
 
     def visit_arg_type(self, node, (_, val)):
         return val
-        
+
     def visit_output(self, _, (_1, val)):
         return val
 
@@ -92,7 +92,11 @@ handlers = {
 }
 
 def hook(d):
-    return dict((k, handlers[k](v)) for k,v in d.items() if k.startswith("!"))
+    d2 = dict(d)
+    for key, val in d.items():
+        if key.startswith('!'):
+            d2[key] = handlers[key](val)
+    return d2
 
 # Not in Python 2.6 :(
 def check_output(*popenargs, **kwargs):
