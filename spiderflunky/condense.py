@@ -2,10 +2,13 @@ import json
 import subprocess
 
 from collections import namedtuple
+from functools import wraps
 from itertools import ifilter, chain, imap
 
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
+
+import requests
 
 Span = namedtuple('Span', ['start', 'end'])
 Position = namedtuple('Position', ['offset', 'row', 'col'])
@@ -138,3 +141,37 @@ def _properties((name, obj)):
 def properties(condensed):
     """Return a list of pairs [(object name, property)]"""
     return chain.from_iterable(imap(_properties, symbols(condensed)))
+
+def tern_request(func):
+    @wraps(func)
+    def _tern_request(address, *args, **kwargs):
+        req = requests.post(address, json.dumps(func(*args, **kwargs)))
+        return json.loads(req.text)
+    return _tern_request
+
+@tern_request
+def register_file(condensed):
+    name = condensed['!name']
+    with open(name, 'r') as f:
+        return {'files': [
+            {'type': 'full',
+             'name': name,
+             'text': ''.join(f.readlines())}]}
+
+@tern_request
+def list_files():
+    return {'query': {'type':'files'}}
+
+@tern_request
+def get_ref(condensed, span):
+    return {'query': {'type':'refs',
+                      'file': condensed['!name'],
+                      'start': span.start.offset,
+                      'end': span.end.offset}}
+
+def refs(address, condensed, spans):
+    return (get_ref(address, condensed, span) for span in spans)
+
+def callsites(address, condensed):
+    spans = (func['!span'] for _, func in functions(condensed))
+    return refs(address, condensed, spans)
