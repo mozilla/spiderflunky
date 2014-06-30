@@ -92,22 +92,21 @@ handlers = {
 }
 
 def hook(d):
-    d2 = dict(d)
-    for key, val in d.items():
-        if key.startswith('!'):
-            d2[key] = handlers[key](val)
-    return d2
+    return dict((k, handlers[k](v)) for k,v in d.items() if k.startswith("!"))
 
+# Not in Python 2.6 :(
 def check_output(*popenargs, **kwargs):
     process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
     output, unused_err = process.communicate()
     return output
 
 def get_condensed(fpath, condense_path):
+    """Return dictionary from ternjs' condensed output."""
     condensed = check_output([condense_path, fpath])
     return json.loads(condensed, object_hook=hook)
 
 def symbols(condensed):
+    """Return a dict, (symbol name) -> (dict of fields and metadata)."""
     queue = condensed.items()
     while len(queue) != 0:
         key, val = queue.pop()
@@ -124,6 +123,7 @@ def is_function((_, obj)):
     return hasattr(_type, 'input') and hasattr(_type, 'output')
 
 def functions(condensed):
+    """Return a dict (function name) -> (dict of metadata)."""
     return ifilter(is_function, symbols(condensed))
 
 def _properties((name, obj)):
@@ -132,4 +132,5 @@ def _properties((name, obj)):
     return ((name, k) for k in obj.keys() if not k.startswith('!'))
 
 def properties(condensed):
+    """Return a list of pairs [(object name, property)]"""
     return chain.from_iterable(imap(_properties, symbols(condensed)))
