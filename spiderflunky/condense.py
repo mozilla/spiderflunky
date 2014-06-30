@@ -27,7 +27,7 @@ class SpanVisitor(NodeVisitor):
     def generic_visit(self, _, __):
         return None
 
-span_grammar = Grammar("""
+span_grammar = Grammar(r"""
 span = num pos "-" num pos
 pos = "[" num ":" num "]"
 num = ~r"\d+"
@@ -70,7 +70,7 @@ def create_handler(grammar, visitor):
     visitor_inst = visitor()
     return lambda x : visitor_inst.visit(grammar.parse(x))
 
-value_grammar = Grammar("""
+value_grammar = Grammar(r"""
 val = func / list / qname / name
 qname = name ":" (qname / name)
 func = "fn" "(" args ")" output?
@@ -173,5 +173,6 @@ def refs(address, condensed, spans):
     return (get_ref(address, condensed, span) for span in spans)
 
 def callsites(address, condensed):
+    """Return all callsites."""
     spans = (func['!span'] for _, func in functions(condensed))
     return refs(address, condensed, spans)
