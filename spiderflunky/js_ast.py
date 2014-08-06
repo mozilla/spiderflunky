@@ -1,17 +1,18 @@
-"""Contains code pertaining to the JS AST representation. This is generated
-based on the Mozilla Parser API at import time.
+"""Contains code pertaining to the JS AST representation.
+
+This is generated based on the Mozilla Parser API at import time.
 
 """
+import sys
+import pkg_resources
+from itertools import repeat, izip
 
 from pyquery import PyQuery
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
 from parsimonious.exceptions import ParseError
-from more_itertools import first
+from funcy import first, constantly
 from toposort import toposort_flatten
-from itertools import repeat, izip
-import sys
-import pkg_resources
 
 
 class BaseNode(dict):
@@ -33,7 +34,7 @@ class BaseNode(dict):
             yield node
             node = node.parent
 
-    def walk_down(self, skip=lambda n: False, include_self=True):
+    def walk_down(self, skip=constantly(False), include_self=True):
         """Yield each node from here downward, myself included,
         in depth-first pre-order.
 
