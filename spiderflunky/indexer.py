@@ -1,3 +1,12 @@
+"""Index the Spider Monkey AST.
+
+Uses the same intermediate representation used in DXR's clang plugin.
+The transform function is the main entry point for the conversion.
+
+The structure of the IR is a grouping of AST node types with dictionaries
+of metadata.
+
+"""
 from operator import itemgetter
 
 from funcy import group_by, constantly, walk, identity, merge
