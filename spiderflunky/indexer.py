@@ -1,12 +1,14 @@
+from operator import itemgetter
+
 from funcy import group_by, constantly, walk, identity, merge
 
 
-FUNC_GROUP = constantly('function')
-ARROW_GROUP = constantly('function')
-VAR_GROUP = constantly('variable')
-CALL_GROUP = constantly('call')
-SYM_GROUP = constantly('symbol')
-NONE_GROUP = constantly('None')
+FUNC_GROUP = 'function'
+ARROW_GROUP = 'arrow'
+VAR_GROUP = 'variable'
+CALL_GROUP = 'call'
+SYM_GROUP = 'symbol'
+NONE_GROUP = 'None'
 
 
 GROUPS = {
@@ -18,11 +20,12 @@ GROUPS = {
     'LetStatement': VAR_GROUP,
     'LetExpression': VAR_GROUP,
     'CallExpression': CALL_GROUP,
+    'Identifier': SYM_GROUP
 }
 
 
 def _categorize(node):
-    return GROUPS.get(node.get('type'), NONE_GROUP)(node)
+    return GROUPS.get(node.get('type'), NONE_GROUP)
 
 
 def categorize(ast):
@@ -37,7 +40,7 @@ def with_view(tag, view):
     return _with_view
 
 
-span_view = with_view('span', lambda node: node['loc'])
+span_view = with_view('span', itemgetter('loc'))
 
 
 @span_view
@@ -55,10 +58,17 @@ def process_var(node):
     return {'name': node.children()[0]['id']['name']}
 
 
+@span_view
+def process_sym(node):
+    return {'name': node['name']}
+
+
 PROCESS = {
-    'function': process_func,
-    'variable': process_var,
-    'arrow': process_arrow,
+    FUNC_GROUP: process_func,
+    VAR_GROUP: process_var,
+    ARROW_GROUP: process_arrow,
+    CALL_GROUP: identity,
+    SYM_GROUP: process_sym,
 }
 
 
