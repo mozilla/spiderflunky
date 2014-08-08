@@ -7,9 +7,7 @@ The structure of the IR is a grouping of AST node types with dictionaries
 of metadata.
 
 """
-from operator import itemgetter
-
-from funcy import group_by, constantly, walk, identity, merge
+from funcy import group_by, walk, identity, merge
 
 
 FUNC_GROUP = 'function'
@@ -34,56 +32,40 @@ GROUPS = {
 
 
 def _categorize(node):
+    """Return which group node belongs to."""
     return GROUPS.get(node.get('type'), NONE_GROUP)
 
 
 def categorize(ast):
+    """Group ast nodes based on their type."""
     return group_by(_categorize, ast.walk_down())
 
 
-def with_view(tag, view):
-    def _with_view(func):
-        def __with_view(node):
-            return merge({tag: view(node)}, func(node))
-        return __with_view
-    return _with_view
-
-
-span_view = with_view('span', itemgetter('loc'))
-
-
-@span_view
-def process_func(node):
-    return {'name': node['id']['name']}
-
-
-@span_view
-def process_arrow(_):
-    return {}
-
-
-@span_view
-def process_var(node):
-    return {'name': node.children()[0]['id']['name']}
-
-
-@span_view
-def process_sym(node):
-    return {'name': node['name']}
+def add_span(node):
+    """
+    Adds span based on location. Is guaentied to work for any node
+    """
+    return {'span': node['loc']}
 
 
 PROCESS = {
-    FUNC_GROUP: process_func,
-    VAR_GROUP: process_var,
-    ARROW_GROUP: process_arrow,
-    CALL_GROUP: identity,
-    SYM_GROUP: process_sym,
+    FUNC_GROUP: lambda node: {'name': node['id']['name']},
+    VAR_GROUP: lambda node: {'name': node.children()[0]['id']['name']},
+    ARROW_GROUP: lambda _: {},
+    CALL_GROUP: lambda _: {},
+    SYM_GROUP: lambda node: {'name': node['name']},
 }
 
 
-def process((group, vals)):
-    return group, map(PROCESS.get(group, identity), vals)
+def process((group, nodes)):
+    """Based on the group, transform a list a nodes int a list of metadata."""
+    process_val = lambda node: merge(
+        add_span(node), PROCESS.get(group, identity)(node))
+    return group, map(process_val, nodes)
 
 
 def transform(ast):
+    """Transform AST into grouped (by node type) dictionary of metadata dicts.
+
+    """
     return walk(process, categorize(ast))
