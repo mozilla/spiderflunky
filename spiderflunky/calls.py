@@ -45,7 +45,6 @@ def lookup(call_site):
         name = call_site['callee']['name']
         return call_site.scope_of(name).scope().get(name, None)
     else:
-        import ipdb; ipdb.set_trace()
         return None
 
 def get_name(node):
