@@ -21,24 +21,16 @@ VAR_DECLARATOR = "VariableDeclarator"
 FUNC_DECL = "FunctionDeclaration"
 
 
-class BaseNode(dict):
+class Node(dict):
     """A wrapper around a native Reflect.parse dict providing some convenience
     methods and some caching of expensive computations
 
     Importing a zillion helper functions into every module is a pain.
 
     """
-    def __init__(self, parent, *args, **kwargs):
-        super(BaseNode, self).__init__(*args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super(Node, self).__init__(*args, **kwargs)
         self.parent = parent
-
-    def walk_up(self):
-        """Yield each node from here to the root of the tree, starting with
-        myself."""
-        node = self
-        while node:
-            yield node
-            node = node.parent
 
     def walk_down(self, skip=constantly(False), include_self=True):
         """Yield each node from here downward, myself included,
@@ -63,55 +55,6 @@ class BaseNode(dict):
             # Just a "yield from":
             for ret in child.walk_down(skip=skip):
                 yield ret
-
-    def _children(self):
-        return []
-
-    def children(self):
-        """Return my children, accounting for variations in where children are
-        stored in each node type.
-
-        """
-        return self._children()
-
-    def nearest_scope(self):
-        """Return the closest containing scope, constructing and caching it
-        first if necessary.
-
-        """
-        return self.nearest_scope_holder().scope()
-
-    def scope_chain(self):
-        """Yield each scope-defining node from myself upward."""
-        node = self.nearest_scope_holder()
-        while True:
-            yield node
-            if node['type'] == PROGRAM:
-                break
-            node = node.parent.nearest_scope_holder()
-
-    def nearest_scope_holder(self):
-        """Return the nearest node that can have its own scope, potentially
-        including myself.
-
-        This will be either a FunctionDeclaration or a Program (for now).
-
-        """
-        return first(n for n in self.walk_up() if
-                     n['type'] in (FUNC_DECL, PROGRAM))
-
-    def scope_of(self, symbol_name):
-        """Return the nearest enclosing AST node (including myself) where the
-        variable named ``symbol_name`` is defined.
-
-        """
-        for node in self.scope_chain():
-            if symbol_name in node.scope():
-                return node
-
-    def scope(self,):
-        """Return the set of symbols declared exactly at this node."""
-        return dict()
 
     def __hash__(self):
         return id(self)
@@ -153,41 +96,6 @@ def _flatten(lis):
                 yield sub
         else:
             yield elem
-
-
-def _hoisted_scope(tree):
-    return dict((node['id']['name'], node) for node
-                in tree.walk_down(skip=lambda n: n == FUNC_DECL)
-                if node['type'] in (VAR_DECLARATOR, FUNC_DECL))
-
-
-def function_scope(self):
-    """Return the set of symbols declared exactly at this node."""
-    # We store a set of symbols at each node that can hold a scope, except
-    # that we don't bother for the Program (global) scope. It holds
-    # everything we couldn't find elsewhere.
-    # TODO look at 'kind' of variable declaration
-
-    if '_scope' not in self:  # could store this in an instance var
-        # Find all the var decls within me, but don't go within any other
-        # functions. This implements hoisting.
-        self['_scope'] = dict((self, param['name']) for param in self['params'])
-        self['_scope'].update(_hoisted_scope(self))
-    return self['_scope']
-
-
-def program_scope(self):
-    if '_scope' not in self:  # could store this in an instance var
-        # Find all the var decls within me, but don't go within any other
-        # functions. This implements hoisting.
-        self['_scope'] = _hoisted_scope(self)
-    return self['_scope']
-
-
-def function_repr(self):
-    if self['id'] is None:
-        return str(None)
-    return self['id']['name']
 
 
 API_GRAMMAR = r"""

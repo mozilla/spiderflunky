@@ -7,7 +7,7 @@ from functools import partial
 
 import simplejson as json
 
-from spiderfluny.js_ast import set_parents
+from spiderflunky.js_ast import Node
 
 
 class JsReflectException(Exception):
@@ -76,7 +76,7 @@ def raw_parse(code, shell):
 
         data = decode(data)
 
-        parsed = json.loads(data, strict=False)
+        parsed = json.loads(data, strict=False, object_hook=lambda x: Node(x))
 
         if error_code == ERROR_CODE:
             if parsed.get("error"):

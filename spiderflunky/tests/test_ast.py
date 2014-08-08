@@ -1,16 +1,8 @@
 from more_itertools import first
 from nose.tools import eq_
 
-from spiderflunky.js_ast import BaseNode, set_parents, FunctionDeclaration
+from spiderflunky.js_ast import FUNC_DECL
 from spiderflunky.parser import parse
-
-
-class Node(BaseNode):
-    def _children(self):
-        return self['body']
-        ast = Node(None, {'a': 1, 'body': [Node(None, {'a': 2, 'body': [Node(None, {'a': 3, 'body': []})]}),
-                                           Node(None, {'a': 4, 'body': []})]})
-        set_parents(ast)
 
 
 def test_walk_down_smoke():

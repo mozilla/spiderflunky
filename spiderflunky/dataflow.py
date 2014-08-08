@@ -1,5 +1,5 @@
 from collections import namedtuple
-from js_ast import Assign_Expr, Var_Declarator
+from spiderflunky.js_ast import ASSIGN_EXPR, VAR_DECLARATOR
 
 
 # scope is an AST node.
