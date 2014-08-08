@@ -8,7 +8,7 @@ import pkg_resources
 from pyquery import PyQuery
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
-from funcy import constantly, is_mapping, ifilter, flatten, icat
+from funcy import constantly, is_mapping, ifilter, flatten, iflatten
 from toposort import toposort_flatten
 
 
@@ -21,8 +21,9 @@ VAR_DECLARATOR = "VariableDeclarator"
 FUNC_DECL = "FunctionDeclaration"
 
 
-def is_child(node):
-    return is_mapping(node) and "type" in node
+def is_node(item):
+    """Tests whether item is a node."""
+    return is_mapping(item) and "type" in item
 
 
 def walk_down(root, skip=constantly(False), include_self=True):
@@ -41,7 +42,7 @@ def walk_down(root, skip=constantly(False), include_self=True):
     """
     if include_self:
         yield root
-    for child in ifilter(is_child, icat(root.itervalues())):
+    for child in ifilter(is_node, iflatten(root.itervalues())):
         if skip(child):
             yield child
             continue
@@ -109,36 +110,41 @@ __ = ~r"\s+"
 
 
 class SpecVisitor(NodeVisitor):
-    """Implements a NodeVisitor for the Mozilla Parser API
-    Returns (name of interface, parents, fields)
-
-    """
+    """Implements a NodeVisitor for the Mozilla Parser API."""
     def visit_start(self, _, (_0, interface, _1)):
+        """Parse start rule, really just whitespace padding for interface."""
         return interface
 
     def visit_interface(self, _, (_0, _1, name, _2, maybe_inherit, _3, _4,
                                   _5, maybe_attrs, _6, _7)):
+        """Parse the name, inheritance, and attributes for an interface."""
         inherit = maybe_inherit[0] if maybe_inherit else []
         attrs = maybe_attrs[0] if maybe_attrs else []
         return (name, inherit, attrs)
 
     def visit_inherit(self, _, (_0, _1, parents)):
+        """Get all of the interfaces this interface inherits from."""
         return parents
 
     def visit_parents(self, _, (name, _0, more_parents)):
+        """Parse inheritance list."""
         return [name] + flatten(more_parents)
 
     def visit_attrs(self, _, (attr, _0, _1, _2, attrs)):
+        """Return list of all attributes of an interface."""
         return [attr] + (attrs[0] if attrs else [])
 
     def visit_attr(self, _, children):
+        """Parse attribute."""
         # task throw away attr if its static like type
         return children[0]
 
     def visit_id(self, node, _):
+        """Grab the identifier that was match."""
         return node.match.group()
 
     def generic_visit(self, _, visited_children):
+        """Just pass through the children."""
         return visited_children
 
 
