@@ -18,6 +18,7 @@ SYM_GROUP = 'symbol'
 NONE_GROUP = 'None'
 
 
+# mapping type -> GROUP
 GROUPS = {
     'Function': FUNC_GROUP,
     'FunctionExpression': FUNC_GROUP,
@@ -48,6 +49,7 @@ def add_span(node):
     return {'span': node['loc']}
 
 
+# mapping GROUP -> (node -> metadata)
 PROCESS = {
     FUNC_GROUP: lambda node: {'name': node['id']['name']},
     VAR_GROUP: lambda node: {'name': node.children()[0]['id']['name']},
