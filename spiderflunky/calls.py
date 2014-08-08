@@ -37,7 +37,7 @@ def lookup(call_site):
     """Look up the declaration of this call_site."""
     # Check if scope_of or its children has the same id as the call_site'
     callee = call_site['callee']
-    if callee['type'] == FUNC_EXPR):
+    if callee['type'] == FUNC_EXPR:
         if callee['id'] is None:            
             return None
         return callee['id']['name']

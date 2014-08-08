@@ -14,8 +14,8 @@ def assignments(ast):
 
     """
     return (node for node in ast.walk_down() if
-            (node['type'] == AssignExpr and node['operator'] == '=') or
-            (node['type'] == VarDeclarator and node['init'] is not None))
+            (node['type'] == ASSIGN_EXPR and node['operator'] == '=') or
+            (node['type'] == VAR_DECLARATOR and node['init'] is not None))
 
 
 # TODO: We'll also have to watch when objects are created. You can put
