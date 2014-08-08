@@ -3,9 +3,9 @@ import os
 import re
 import subprocess
 import tempfile
-from .js_ast import node_hook, set_parents
-import simplejson as json
 from functools import partial
+
+import simplejson as json
 
 
 class JsReflectException(Exception):
@@ -26,10 +26,10 @@ ERROR_CODE = 100
 
 
 def parse(code, shell='js'):
-    return raw_parse(code, node_hook, shell)
+    return raw_parse(code, shell)
 
 
-def raw_parse(code, object_hook, shell):
+def raw_parse(code, shell):
     """Return an AST of the JS passed in ``code`` in native Reflect.parse
     format
 
@@ -74,7 +74,7 @@ def raw_parse(code, object_hook, shell):
 
         data = decode(data)
 
-        parsed = json.loads(data, strict=False, object_hook=object_hook)
+        parsed = json.loads(data, strict=False)
 
         if error_code == ERROR_CODE:
             if parsed.get("error"):
@@ -86,8 +86,6 @@ def raw_parse(code, object_hook, shell):
                 else:
                     raise JsReflectException(parsed["error_message"],
                                              line=parsed["line_number"])
-        else:
-            set_parents(parsed)
 
         # Closing the temp file will delete it.
     finally:
