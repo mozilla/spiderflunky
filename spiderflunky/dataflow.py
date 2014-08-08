@@ -1,5 +1,5 @@
 from collections import namedtuple
-from js_ast  import AssignmentExpression, VariableDeclarator
+from js_ast import Assign_Expr, Var_Declarator
 
 
 # scope is an AST node.
@@ -14,8 +14,8 @@ def assignments(ast):
 
     """
     return (node for node in ast.walk_down() if
-        (isinstance(node, AssignmentExpression) and node['operator'] == '=') or
-        (isinstance(node, VariableDeclarator) and node['init'] is not None))
+            (node['type'] == AssignExpr and node['operator'] == '=') or
+            (node['type'] == VarDeclarator and node['init'] is not None))
 
 
 # TODO: We'll also have to watch when objects are created. You can put

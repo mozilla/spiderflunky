@@ -3,16 +3,22 @@
 This is generated based on the Mozilla Parser API at import time.
 
 """
-import sys
 import pkg_resources
-from itertools import repeat, izip
 
 from pyquery import PyQuery
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
-from parsimonious.exceptions import ParseError
 from funcy import first, constantly
 from toposort import toposort_flatten
+
+
+CALL_EXPR = "CallExpression"
+FUNC_EXPR = "FunctionExpression"
+IDENT = "Identifier"
+PROGRAM = "Program"
+ASSIGN_EXPR = "AssignmentExpression"
+VAR_DECLARATOR = "VariableDeclarator"
+FUNC_DECL = "FunctionDeclaration"
 
 
 class BaseNode(dict):
@@ -80,7 +86,7 @@ class BaseNode(dict):
         node = self.nearest_scope_holder()
         while True:
             yield node
-            if isinstance(node, Program):
+            if node['type'] == PROGRAM:
                 break
             node = node.parent.nearest_scope_holder()
 
@@ -92,7 +98,7 @@ class BaseNode(dict):
 
         """
         return first(n for n in self.walk_up() if
-                     isinstance(n, (FunctionDeclaration, Program)))
+                     n['type'] in (FUNC_DECL, PROGRAM))
 
     def scope_of(self, symbol_name):
         """Return the nearest enclosing AST node (including myself) where the
@@ -102,8 +108,6 @@ class BaseNode(dict):
         for node in self.scope_chain():
             if symbol_name in node.scope():
                 return node
-        # TODO: this might actually be a bug. If its not in the program's scope its undefined
-        return node  # global
 
     def scope(self,):
         """Return the set of symbols declared exactly at this node."""
@@ -130,19 +134,14 @@ def get_specs(parser, parser_api_htm):
         yield visitor.visit(parser.parse(spec))
 
 
-def dependency_order(specs):
-    dep_map = dict((name,set(parents)) for (name, parents, _) in specs)
-    return toposort_flatten(dep_map)
-
-
-def get_class_map(specs):
-    """Based on a list of specifications, return a mapping name->cls."""
-    dep_order = dependency_order(specs)
-    spec_map = dict((name, (parents, vals)) for name, parents, vals in specs)
-    class_map = {}
-    for name in dep_order:
-        class_map[name] = _node_class_factory(class_map, name, *spec_map[name])
-    return class_map
+def get_inheritance(specs):
+    """Builds mapping class -> set of all descendants."""
+    tree = dict((name, set(children)) for name, children, _ in specs)
+    for node in toposort_flatten(tree):
+        children = tree[node]
+        for child in set(children):
+            tree[node] |= tree[child]
+    return tree
 
 
 def _flatten(lis):
@@ -158,8 +157,9 @@ def _flatten(lis):
 
 def _hoisted_scope(tree):
     return dict((node['id']['name'], node) for node
-                in tree.walk_down(skip=lambda n: isinstance(n, FunctionDeclaration))
-                if isinstance(node, (VariableDeclarator, FunctionDeclaration)))
+                in tree.walk_down(skip=lambda n: n == FUNC_DECL)
+                if node['type'] in (VAR_DECLARATOR, FUNC_DECL))
+
 
 def function_scope(self):
     """Return the set of symbols declared exactly at this node."""
@@ -175,6 +175,7 @@ def function_scope(self):
         self['_scope'].update(_hoisted_scope(self))
     return self['_scope']
 
+
 def program_scope(self):
     if '_scope' not in self:  # could store this in an instance var
         # Find all the var decls within me, but don't go within any other
@@ -187,39 +188,6 @@ def function_repr(self):
     if self['id'] is None:
         return str(None)
     return self['id']['name']
-
-
-def _node_class_factory(class_map, name, parents, fields):
-    """Return a class representing an AST node."""
-    # Could perhaps be replaced by an explicit MetaClass
-    def _children(self):
-        fields_vals = filter(lambda val: isinstance(val, BaseNode),
-                             _flatten(self[f] for f in fields))
-        return fields_vals
-
-    __dict__ = {'_children': _children}
-    if "params" in fields:
-        __dict__['scope'] = function_scope
-        __dict__['__repr__'] = function_repr
-
-    elif name == "Program":
-        __dict__['scope'] = program_scope
-        __dict__['__repr__'] = lambda self: "Program"
-
-    bases = tuple(map(class_map.get, parents)) if parents else (BaseNode,)
-    return type(str(name), bases, __dict__)
-
-
-def set_parents(root):
-    """Set the parent attribute for all nodes in the tree.
-    Root's parent is None
-
-    """
-    queue = [(root, None)]
-    while queue:
-        node, parent = queue.pop()
-        node.parent = parent
-        queue.extend(izip(node.children(), repeat(node)))
 
 
 API_GRAMMAR = r"""
@@ -256,7 +224,7 @@ class SpecVisitor(NodeVisitor):
     Returns (name of interface, parents, fields)
 
     """
-    def visit_start(self, node, (_, interface, __)):
+    def visit_start(self, node, (_0, interface, _1)):
         return interface
 
     def visit_interface(self, node, (_0, _1, name, _2, maybe_inherit, _3, _4,
@@ -265,13 +233,13 @@ class SpecVisitor(NodeVisitor):
         attrs = maybe_attrs[0] if maybe_attrs else []
         return (name, inherit, attrs)
 
-    def visit_inherit(self, _, (__, ___, parents)):
+    def visit_inherit(self, _, (_0, _1, parents)):
         return parents
 
-    def visit_parents(self, _, (name, __, next_parent)):
+    def visit_parents(self, _, (name, _0, next_parent)):
         return [name]
 
-    def visit_attrs(self, _, (attr, __, ___, ____, attrs)):
+    def visit_attrs(self, _, (attr, _0, _1, _2, attrs)):
         return [attr] + (attrs[0] if attrs else [])
 
     def visit_attr(self, _, children):
@@ -284,19 +252,8 @@ class SpecVisitor(NodeVisitor):
     def generic_visit(self, _, visited_children):
         return visited_children
 
+
+# Inject INHERITANCE from spec into module
 api_parser = Grammar(API_GRAMMAR)
-
-
-def node_hook(json_dict):
-    """This is a object hook for the json loads function.
-
-    """
-    return class_map.get(json_dict.get('type'), BaseNode)(None, json_dict)
-
-# Inject classes from spec into module
 PARSER_API_HTML = pkg_resources.resource_string(__name__, "Parser_API.html")
-
-class_map = get_class_map(list(get_specs(api_parser, PARSER_API_HTML)))
-this_module = sys.modules[__name__]
-for cls_name, cls in class_map.items():
-    setattr(this_module, cls_name, cls)
+INHERIT = get_inheritance(list(get_specs(api_parser, PARSER_API_HTML)))

@@ -1,4 +1,4 @@
-from spiderflunky.js_ast import CallExpression, FunctionExpression, Identifier
+from spiderflunky.js_ast import CALL_EXPR, FUNC_EXPR, IDENT
 from spiderflunky.parser import parse
 
 from networkx import DiGraph
@@ -37,15 +37,16 @@ def lookup(call_site):
     """Look up the declaration of this call_site."""
     # Check if scope_of or its children has the same id as the call_site'
     callee = call_site['callee']
-    if isinstance(callee, FunctionExpression):
+    if callee['type'] == FUNC_EXPR):
         if callee['id'] is None:            
             return None
         return callee['id']['name']
-    elif isinstance(callee, Identifier):
+    elif callee['type'] == IDENT:
         name = call_site['callee']['name']
         return call_site.scope_of(name).scope().get(name, None)
     else:
         return None
+
 
 def get_name(node):
     """Return the identifier for this node."""
